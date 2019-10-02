@@ -34,6 +34,9 @@
     <PostBuildEvent>
       <Command>xcopy "$(SolutionDir)Resources" "$(TargetDir)Resources" /Y /I /R /S /E </Command>
     </PostBuildEvent>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>
