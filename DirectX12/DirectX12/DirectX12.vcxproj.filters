@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{6699ae57-0943-47a5-9d6c-c785e973c5d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources\Shaders">
+      <UniqueIdentifier>{6b45de9c-d823-49e2-9b51-417d6be633a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{bce34629-d58d-45c5-98da-e5d2790f71c5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Resources\Shader\PixelShader.hlsl" />
+    <FxCompile Include="Resources\Shader\VertexShader.hlsl" />
+  </ItemGroup>
+</Project>

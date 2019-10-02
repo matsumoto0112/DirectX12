@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <OutDir>$(SolutionDir)Temp\bin\$(PlatformTarget)\$(Configuration)\$(ProjectName)\</OutDir>
+    <IntDir>$(SolutionDir)Temp\obj\$(PlatformTarget)\$(Configuration)\$(ProjectName)\</IntDir>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>ConcurrencyRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AssemblerListingLocation>$(IntDir)%(Directory)%(FileName)</AssemblerListingLocation>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <ObjectFileName>$(IntDir)%(Directory)%(FileName)</ObjectFileName>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <ForcedIncludeFiles>stdafx.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <EnablePREfast>false</EnablePREfast>
+    </ClCompile>
+    <FxCompile>
+      <ShaderModel>6.3</ShaderModel>
+      <ObjectFileOutput>$(OutDir)\cso\%(RelativeDir)\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
+    <Link />
+    <Link />
+    <Link />
+    <Link />
+    <Link />
+    <PostBuildEvent>
+      <Command>xcopy "$(SolutionDir)Resources" "$(TargetDir)Resources" /Y /I /R /S /E </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>

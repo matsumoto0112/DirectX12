@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{1c91fa35-e800-4a88-bc11-7d44afd5d4ac}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Define\Config.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Define\Path.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Device\GameDevice.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Game.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Color4.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXWrap.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Pipeline.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Shader\Shader.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Shader\VertexShader.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Input\InputManager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Input\Joystick.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Input\Keyboard.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Input\Mouse.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Math\IntVector2.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Math\MathUtility.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Math\Matrix3x3.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Math\Matrix4x4.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Math\Quaternion.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Math\Rect.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Math\Vector2.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Math\Vector3.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Math\Vector4.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Utility\Debug.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Utility\FPS.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\ByteReader.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\TextureLoader.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Utility\Time.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Window\Procedure\CloseProc.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Window\Procedure\DestroyProc.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Window\Window.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Window\WindowProcedures.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Define\Config.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Define\Path.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Device\GameDevice.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Game.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Color4.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXWrap.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\GraphicsDevice.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Helper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Pipeline.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Shader\PixelShader.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Shader\Shader.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Shader\VertexShader.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Input\ButtonID.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Input\ControllerUtil.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Input\ID.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Input\InputManager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Input\Joystick.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Input\Keyboard.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Input\KeyCode.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Input\Mouse.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\IntVector2.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\MathUtility.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\Matrix3x3.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\Matrix4x4.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\Primitive2D.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\Primitive\AABB2D.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\Primitive\Capsule2D.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\Primitive\Circle2D.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\Primitive\Line2D.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\Primitive\OBB2D.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\Primitive\Segment2D.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\Quaternion.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\Rect.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\Vector2.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\Vector3.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Math\Vector4.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Debug.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\FPS.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\ByteReader.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\TextureLoader.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Property.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Resource\ResourceManager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Singleton.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\StringBuilder.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Time.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Typedef.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Window\Procedure\CloseProc.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Window\Procedure\DestroyProc.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Window\Procedure\IWindowProc.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Window\Window.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Window\WindowProcedures.h" />
+  </ItemGroup>
+</Project>
