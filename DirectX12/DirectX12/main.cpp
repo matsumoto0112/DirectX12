@@ -25,10 +25,8 @@
 #include "Framework/Window/Window.h"
 #include "Framework/Window/Procedure/DestroyProc.h"
 #include "Framework/Window/Procedure/CloseProc.h"
-#include "Framework/Graphics/DX12/DX12Manager.h"
-#include "Framework/Graphics/DX12/DXWrap.h"
-#include "Framework/Graphics/DX12/Helper.h"
 #include "Framework/Utility/IO/TextureLoader.h"
+#include "Framework/Graphics/DX12/Helper.h"
 
 namespace {
 using namespace Framework::Graphics;

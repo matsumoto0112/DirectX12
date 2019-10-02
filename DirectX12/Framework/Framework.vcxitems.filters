@@ -27,11 +27,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Game.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Define\Path.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Color4.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Pipeline.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Shader\VertexShader.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Shader\Shader.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXWrap.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\TextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -77,15 +72,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Game.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Define\Path.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Color4.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\GraphicsDevice.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Pipeline.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Helper.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Shader\VertexShader.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Shader\Shader.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Shader\PixelShader.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXWrap.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Resource\ResourceManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\TextureLoader.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Helper.h" />
   </ItemGroup>
 </Project>
