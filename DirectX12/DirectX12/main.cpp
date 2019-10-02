@@ -35,6 +35,10 @@ struct Vertex {
     Framework::Math::Vector2 uv;
 };
 
+struct ColorBuffer {
+    Framework::Graphics::Color4 color;
+};
+
 void getHardwareAdapter(IDXGIFactory2* factory, IDXGIAdapter1** ppAdapter) {
     ComPtr<IDXGIAdapter1> adapter = nullptr;
     *ppAdapter = nullptr;
@@ -245,6 +249,7 @@ public:
         window->addProcedureEvent(new DestroyProc());
         window->addProcedureEvent(new CloseProc());
 
+        mColorBuffer.color = Framework::Graphics::Color4(1.0f, 0.0f, 0.0f, 1.0f);
 
 #pragma region INIT_PIPELINE
         //デバッグ用インターフェースを先に作成する
@@ -330,6 +335,12 @@ public:
             throwIfFailed(mDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSRVHeap)));
 
             mRTVDescriptorSize = mDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+            D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc{};
+            cbvHeapDesc.NumDescriptors = 1;
+            cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+            cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+            throwIfFailed(mDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCBVHeap)));
         }
 
         {
@@ -386,7 +397,7 @@ public:
                 const D3D12_STATIC_SAMPLER_DESC* sampler,
                 D3D12_ROOT_SIGNATURE_FLAGS flag) {
                     D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc{};
-                    rootSignatureDesc.Version = D3D_ROOT_SIGNATURE_VERSION::D3D_ROOT_SIGNATURE_VERSION_1_1;
+                    rootSignatureDesc.Version = D3D_ROOT_SIGNATURE_VERSION::D3D_ROOT_SIGNATURE_VERSION_1;
                     rootSignatureDesc.Desc_1_1.NumParameters = num;
                     rootSignatureDesc.Desc_1_1.pParameters = param;
                     rootSignatureDesc.Desc_1_1.NumStaticSamplers = numStaticSampler;
@@ -408,10 +419,17 @@ public:
                 1,
                 0,
                 0,
-                D3D12_DESCRIPTOR_RANGE_FLAGS::D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+                D3D12_DESCRIPTOR_RANGE_FLAGS::D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
 
-            D3D12_ROOT_PARAMETER1 rootParameter[1];
-            rootParameter[0] = initParam(1, &range[0], D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL);
+            D3D12_ROOT_PARAMETER1 rootParameter[2];
+            rootParameter[0] = initParam(1, &range[0], D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_ALL);
+            rootParameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_ALL;
+            rootParameter[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_CBV;
+            rootParameter[1].Descriptor.ShaderRegister = 0;
+            rootParameter[1].Descriptor.RegisterSpace = 0;
+
+            D3D12_ROOT_SIGNATURE_FLAGS  rootSignatureFlags =
+                D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
             D3D12_STATIC_SAMPLER_DESC sampler{};
             sampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -431,12 +449,13 @@ public:
                 rootParameter,
                 1,
                 &sampler,
-                D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+                rootSignatureFlags);
 
             ComPtr<ID3DBlob> sigunature, error;
+            featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION::D3D_ROOT_SIGNATURE_VERSION_1;
             throwIfFailed(serializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &sigunature, &error));
 
-            throwIfFailed(mDevice->CreateRootSignature(0,
+            HRESULT hr = (mDevice->CreateRootSignature(0,
                 sigunature->GetBufferPointer(),
                 sigunature->GetBufferSize(),
                 IID_PPV_ARGS(&mRootSignature)));
@@ -520,13 +539,11 @@ public:
 
             const UINT vertexBufferSize = sizeof(vertices);
 
-            D3D12_HEAP_PROPERTIES prop = PROPERTY(D3D12_HEAP_TYPE_UPLOAD);
-            D3D12_RESOURCE_DESC resourceDesc = RESOURCE(vertexBufferSize);
             //TODO:後でUploadからstaticに変える
             throwIfFailed(mDevice->CreateCommittedResource(
-                &prop,
+                &PROPERTY(D3D12_HEAP_TYPE_UPLOAD),
                 D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
-                &resourceDesc,
+                &RESOURCE(vertexBufferSize),
                 D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
                 nullptr,
                 IID_PPV_ARGS(&mVertexBuffer)));
@@ -547,11 +564,12 @@ public:
         ComPtr<ID3D12Resource> textureUploadHeap;
         {
             constexpr UINT TEXTURE_PIXEL_SIZE = 4;
+            static const std::string TEXTURE_NAME("bg.png");
             UINT WIDTH = 256;
             UINT HEIGHT = 256;
             //テクスチャの生成
             Framework::Utility::TextureLoader loader;
-            std::vector<BYTE> data = loader.load((std::string)Framework::Define::Path::getInstance().texture + "orange.png", &WIDTH, &HEIGHT);
+            std::vector<BYTE> data = loader.load((std::string)Framework::Define::Path::getInstance().texture + TEXTURE_NAME, &WIDTH, &HEIGHT);
             //std::vector<BYTE> data = generate(WIDTH, HEIGHT, TEXTURE_PIXEL_SIZE);
 
             D3D12_RESOURCE_DESC desc{};
@@ -601,6 +619,27 @@ public:
             mDevice->CreateShaderResourceView(mTexture.Get(), &srvDesc, mSRVHeap->GetCPUDescriptorHandleForHeapStart());
         }
 
+        //コンスタントバッファ作成
+        ComPtr<ID3D12Resource> constantBufferHeap;
+        {
+            throwIfFailed(mDevice->CreateCommittedResource(
+                &PROPERTY(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD),
+                D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
+                &RESOURCE(256),
+                D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
+                nullptr,
+                IID_PPV_ARGS(&mConstantBuffer)));
+
+            //D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
+            //cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress();
+            //cbvDesc.SizeInBytes = (sizeof(ColorBuffer) + 255) & ~255;    // CB size is required to be 256-byte aligned.
+            //mDevice->CreateConstantBufferView(&cbvDesc, mCBVHeap->GetCPUDescriptorHandleForHeapStart());
+
+            D3D12_RANGE range{ 0,0 };
+            throwIfFailed(mConstantBuffer->Map(0, &range, reinterpret_cast<void**>(&mCBVDataBegin)));
+            memcpy(mCBVDataBegin, &mColorBuffer, sizeof(mColorBuffer));
+        }
+
         //コマンドリストを閉じて実行処理
         throwIfFailed(mCommandList->Close());
         ID3D12CommandList* lists[] = { mCommandList.Get() };
@@ -636,11 +675,18 @@ public:
 protected:
     virtual void update() override {
         Game::update();
+        mColorBuffer.color.r += 0.01f;
+        if (mColorBuffer.color.r >= 1.0f) mColorBuffer.color.r -= 1.0f;
+        mColorBuffer.color.g += 0.005f;
+        if (mColorBuffer.color.g >= 1.0f) mColorBuffer.color.g -= 1.0f;
+
+        memcpy(mCBVDataBegin, &mColorBuffer, sizeof(mColorBuffer));
     }
     virtual void draw() override {
         throwIfFailed(mCommandAllocator->Reset());
         throwIfFailed(mCommandList->Reset(mCommandAllocator.Get(), mPipelineState.Get()));
         mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+
         ID3D12DescriptorHeap* heaps[] = { mSRVHeap.Get() };
         mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
 
@@ -654,9 +700,10 @@ protected:
         rtvHandle.ptr = static_cast<SIZE_T>(mRTVHeap->GetCPUDescriptorHandleForHeapStart().ptr + INT64(mFrameIndex) * UINT64(mRTVDescriptorSize));
         mCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
-        const float clear[] = { 0.0f,0.0f,0.0f,0.0f };
+        const float clear[] = { 0.65f,0.2f,0.48f,0.0f };
         mCommandList->ClearRenderTargetView(rtvHandle, clear, 0, nullptr);
         mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        mCommandList->SetGraphicsRootConstantBufferView(1, mConstantBuffer->GetGPUVirtualAddress());
         mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
         mCommandList->DrawInstanced(3, 1, 0, 0);
 
@@ -671,6 +718,8 @@ protected:
         waitForPreviousFrame();
     }
     void finalize() override {
+        waitForPreviousFrame();
+        CloseHandle(mFenceEvent);
         Game::finalize();
     }
 
@@ -713,6 +762,10 @@ private:
     HANDLE mFenceEvent;
     D3D12_VIEWPORT mViewport;
     D3D12_RECT mScissorRect;
+    ComPtr<ID3D12DescriptorHeap> mCBVHeap; //!< コンスタントバッファヒープ
+    ComPtr<ID3D12Resource> mConstantBuffer; //!< コンスタントバッファ
+    UINT* mCBVDataBegin;
+    ColorBuffer mColorBuffer;
 };
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPTSTR, _In_ int) {
