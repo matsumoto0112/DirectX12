@@ -35,13 +35,39 @@ inline void throwIfFailed(HRESULT hr) {
 }
 
 /**
-* @brief ポインタがnullなら例外を投げる
+* @brief ヒーププロパティを作成する
+* @param type ヒープの種類
 */
-inline void throwIfNull(void* ptr) {
-    if (!ptr) {
-        throw std::exception("nullptr!");
-    }
+inline D3D12_HEAP_PROPERTIES createProperty(D3D12_HEAP_TYPE type) {
+    D3D12_HEAP_PROPERTIES prop{};
+    prop.Type = type;
+    prop.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY::D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    prop.MemoryPoolPreference = D3D12_MEMORY_POOL::D3D12_MEMORY_POOL_UNKNOWN;
+    prop.CreationNodeMask = 1;
+    prop.VisibleNodeMask = 1;
+    return prop;
 }
+
+/**
+* @brief リソースデスクを作成する
+* @param size リソースのメモリの大きさ
+*/
+inline D3D12_RESOURCE_DESC createResource(UINT size) {
+    D3D12_RESOURCE_DESC res{};
+    res.Dimension = D3D12_RESOURCE_DIMENSION::D3D12_RESOURCE_DIMENSION_BUFFER;
+    res.Alignment = 0;
+    res.Width = size;
+    res.Height = 1;
+    res.DepthOrArraySize = 1;
+    res.MipLevels = 1;
+    res.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
+    res.SampleDesc.Count = 1;
+    res.SampleDesc.Quality = 0;
+    res.Layout = D3D12_TEXTURE_LAYOUT::D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    res.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
+    return res;
+}
+
 
 } //Graphics 
 } //Framework 

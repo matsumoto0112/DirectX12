@@ -28,6 +28,7 @@
 #include "Framework/Utility/IO/TextureLoader.h"
 #include "Framework/Graphics/DX12/Helper.h"
 #include "Framework/Math/Matrix4x4.h"
+#include "Framework/Graphics/DX12/Buffer/VertexBuffer.h"
 
 namespace {
 using namespace Framework::Graphics;
@@ -553,34 +554,35 @@ public:
         {
             const float ratio = static_cast<float>(width) / static_cast<float>(height);
 
-            Vertex vertices[]{
-                {{-1.0f, 1.0f,0.0f,1.0f},{0.0f,0.0f}},
-                {{ 1.0f, 1.0f,0.0f,1.0f},{1.0f,0.0f}},
-                {{ 1.0f,-1.0f,0.0f,1.0f},{1.0f,1.0f}},
-                {{-1.0f,-1.0f,0.0f,1.0f},{0.0f,1.0f}}
+            std::vector<Vertex> vertices{
+                 {{-1.0f, 1.0f,0.0f,1.0f},{0.0f,0.0f}},
+                 {{ 1.0f, 1.0f,0.0f,1.0f},{1.0f,0.0f}},
+                 {{ 1.0f,-1.0f,0.0f,1.0f},{1.0f,1.0f}},
+                 {{-1.0f,-1.0f,0.0f,1.0f},{0.0f,1.0f}}
             };
+            mVertexBuffer = std::make_unique<Framework::Graphics::VertexBuffer>(mDevice.Get(), vertices);
 
-            const UINT vertexBufferSize = sizeof(vertices);
+            //const UINT vertexBufferSize = sizeof(vertices);
 
-            //TODO:後でUploadからstaticに変える
-            throwIfFailed(mDevice->CreateCommittedResource(
-                &PROPERTY(D3D12_HEAP_TYPE_UPLOAD),
-                D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
-                &RESOURCE(vertexBufferSize),
-                D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
-                nullptr,
-                IID_PPV_ARGS(&mVertexBuffer)));
+            ////TODO:後でUploadからstaticに変える
+            //throwIfFailed(mDevice->CreateCommittedResource(
+            //    &PROPERTY(D3D12_HEAP_TYPE_UPLOAD),
+            //    D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
+            //    &RESOURCE(vertexBufferSize),
+            //    D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
+            //    nullptr,
+            //    IID_PPV_ARGS(&mVertexBuffer)));
 
-            //頂点データをコピーする
-            UINT8* vertexDataBegin;
-            D3D12_RANGE range{ 0,0 };
-            throwIfFailed(mVertexBuffer->Map(0, &range, reinterpret_cast<void**>(&vertexDataBegin)));
-            memcpy(vertexDataBegin, vertices, sizeof(vertices));
-            mVertexBuffer->Unmap(0, nullptr);
+            ////頂点データをコピーする
+            //UINT8* vertexDataBegin;
+            //D3D12_RANGE range{ 0,0 };
+            //throwIfFailed(mVertexBuffer->Map(0, &range, reinterpret_cast<void**>(&vertexDataBegin)));
+            //memcpy(vertexDataBegin, vertices, sizeof(vertices));
+            //mVertexBuffer->Unmap(0, nullptr);
 
-            mVertexBufferView.BufferLocation = mVertexBuffer->GetGPUVirtualAddress();
-            mVertexBufferView.StrideInBytes = sizeof(Vertex);
-            mVertexBufferView.SizeInBytes = vertexBufferSize;
+            //mVertexBufferView.BufferLocation = mVertexBuffer->GetGPUVirtualAddress();
+            //mVertexBufferView.StrideInBytes = sizeof(Vertex);
+            //mVertexBufferView.SizeInBytes = vertexBufferSize;
         }
 
         {
@@ -779,7 +781,8 @@ protected:
         mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         mCommandList->SetGraphicsRootConstantBufferView(1, mConstantBuffer->GetGPUVirtualAddress());
         mCommandList->SetGraphicsRootConstantBufferView(2, mMatrixConstantBuffer->GetGPUVirtualAddress());
-        mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
+        mVertexBuffer->setCommand(mCommandList.Get());
+        //mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
         mCommandList->IASetIndexBuffer(&mIndexBufferView);
         mCommandList->DrawInstanced(3, 1, 0, 0);
         mCommandList->DrawIndexedInstanced(mNumIndices, 1, 0, 0, 0);
@@ -832,8 +835,9 @@ private:
     ComPtr<ID3D12PipelineState> mPipelineState; //!< パイプラインステート
     ComPtr<ID3D12PipelineState> mPipelineState2; //!< パイプラインステート
     ComPtr<ID3D12GraphicsCommandList> mCommandList; //!< コマンドリスト
-    ComPtr<ID3D12Resource> mVertexBuffer; //!< 頂点バッファ
-    D3D12_VERTEX_BUFFER_VIEW mVertexBufferView; //!< 頂点バッファビュー
+    std::unique_ptr<Framework::Graphics::VertexBuffer> mVertexBuffer; //!< 頂点バッファ
+    //ComPtr<ID3D12Resource> mVertexBuffer; //!< 頂点バッファ
+    //D3D12_VERTEX_BUFFER_VIEW mVertexBufferView; //!< 頂点バッファビュー
     ComPtr<ID3D12Resource> mIndexBuffer; //!< インデックスバッファ
     D3D12_INDEX_BUFFER_VIEW mIndexBufferView; //!< インデックスバッファビュー
     ComPtr<ID3D12Resource> mTexture; //!< テクスチャ
