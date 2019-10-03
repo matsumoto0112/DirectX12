@@ -552,17 +552,12 @@ public:
         //頂点バッファ作成
         {
             const float ratio = static_cast<float>(width) / static_cast<float>(height);
-            ////Vertex vertices[]{
-            ////    { { 0.0f,    0.25f * ratio, 0.0f ,1.0f}, { 0.5f, 0.0f } },
-            ////    { { 0.25f,  -0.25f * ratio, 0.0f ,1.0f}, { 1.0f, 1.0f } },
-            ////    { { -0.25f, -0.25f * ratio, 0.0f ,1.0f}, { 0.0f, 1.0f } }
-            ////};
 
             Vertex vertices[]{
-                {{0.0f,0.0f,0.0f,1.0f},{0.0f,0.0f}},
-                {{1.0f,0.0f,0.0f,1.0f},{1.0f,0.0f}},
-                {{1.0f,-1.0f,0.0f,1.0f},{1.0f,1.0f}},
-                {{0.0f,-1.0f,0.0f,1.0f},{0.0f,1.0f}}
+                {{-1.0f, 1.0f,0.0f,1.0f},{0.0f,0.0f}},
+                {{ 1.0f, 1.0f,0.0f,1.0f},{1.0f,0.0f}},
+                {{ 1.0f,-1.0f,0.0f,1.0f},{1.0f,1.0f}},
+                {{-1.0f,-1.0f,0.0f,1.0f},{0.0f,1.0f}}
             };
 
             const UINT vertexBufferSize = sizeof(vertices);
