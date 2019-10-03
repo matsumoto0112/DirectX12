@@ -1,68 +1,66 @@
-//#include "Texture.h"
-//#include "Framework/Utility/IO/TextureLoader.h"
-//#include "Framework/Graphics/DX12/DXInterfaceAccessor.h"
-//#include "Framework/Graphics/DX12/Helper.h"
-//
-//namespace Framework {
-//namespace Graphics {
-//Texture::Texture(const std::string& filepath) {
-//
-//    constexpr UINT TEXTURE_PIXEL_SIZE = 4;
-//    UINT WIDTH = 256;
-//    UINT HEIGHT = 256;
-//    //テクスチャの生成
-//    Framework::Utility::TextureLoader loader;
-//    std::vector<BYTE> data = loader.load(filepath, &WIDTH, &HEIGHT);
-//
-//    D3D12_RESOURCE_DESC desc{};
-//    desc.MipLevels = 1;
-//    desc.Format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
-//    desc.Width = WIDTH;
-//    desc.Height = HEIGHT;
-//    desc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
-//    desc.DepthOrArraySize = 1;
-//    desc.SampleDesc.Count = 1;
-//    desc.SampleDesc.Quality = 0;
-//    desc.Dimension = D3D12_RESOURCE_DIMENSION::D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-//
-//    throwIfFailed(DXInterfaceAccessor::getDevice()->CreateCommittedResource(
-//        &createProperty(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_DEFAULT),
-//        D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
-//        &desc,
-//        D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST,
-//        nullptr,
-//        IID_PPV_ARGS(&mTexture)));
-//
-//    const UINT64 uploadBufferSize = getRequiredIntermediateSize(mTexture.Get(), 0, 1);
-//
-//    ComPtr<ID3D12Resource> textureUploadHeap;
-//    //GPUアップロードバッファ作成
-//    throwIfFailed(mDevice->CreateCommittedResource(
-//        &PROPERTY(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD),
-//        D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
-//        &RESOURCE(uploadBufferSize),
-//        D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
-//        nullptr,
-//        IID_PPV_ARGS(&textureUploadHeap)));
-//
-//    std::vector<UINT8> texture = data;
-//
-//    D3D12_SUBRESOURCE_DATA sub{};
-//    sub.pData = &texture[0];
-//    sub.RowPitch = WIDTH * TEXTURE_PIXEL_SIZE;
-//    sub.SlicePitch = sub.RowPitch * HEIGHT;
-//    updateSubresource(Framework::Graphics::DX12Manager::getInstance().getCommandList(), mTexture.Get(), textureUploadHeap.Get(), 0, 0, 1, &sub);
-//
-//    Framework::Graphics::DX12Manager::getInstance().getCommandList()->ResourceBarrier(1, &BARRIER(mTexture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-//
-//
-//    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-//    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-//    srvDesc.Format = desc.Format;
-//    srvDesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2D;
-//    srvDesc.Texture2D.MipLevels = 1;
-//    mDevice->CreateShaderResourceView(mTexture.Get(), &srvDesc, mSRVHeap->GetCPUDescriptorHandleForHeapStart());
-//}
-//
-//} //Graphics 
-//} //Framework 
+#include "Texture.h"
+#include "Framework/Utility/IO/TextureLoader.h"
+#include "Framework/Graphics/DX12/DXInterfaceAccessor.h"
+#include "Framework/Graphics/DX12/Helper.h"
+
+namespace Framework {
+namespace Graphics {
+
+Texture::Texture(const std::string& filepath) {
+    UINT WIDTH;
+    UINT HEIGHT;
+    //テクスチャの生成
+    Framework::Utility::TextureLoader loader;
+    std::vector<BYTE> data = loader.load(filepath, &WIDTH, &HEIGHT);
+
+    D3D12_HEAP_PROPERTIES heapPropertices{};
+    heapPropertices.Type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_CUSTOM;
+    heapPropertices.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY::D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
+    heapPropertices.MemoryPoolPreference = D3D12_MEMORY_POOL::D3D12_MEMORY_POOL_L0;
+    heapPropertices.VisibleNodeMask = 1;
+    heapPropertices.CreationNodeMask = 1;
+
+    D3D12_RESOURCE_DESC resourceDesc{};
+    resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION::D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    resourceDesc.Width = WIDTH;
+    resourceDesc.Height = HEIGHT;
+    resourceDesc.DepthOrArraySize = 1;
+    resourceDesc.MipLevels = 1;
+    resourceDesc.Format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
+    resourceDesc.Layout = D3D12_TEXTURE_LAYOUT::D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    resourceDesc.SampleDesc.Count = 1;
+    resourceDesc.SampleDesc.Quality = 0;
+    throwIfFailed(DXInterfaceAccessor::getDevice()->CreateCommittedResource(&heapPropertices, D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
+        &resourceDesc, D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&mTexture)));
+
+    D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{};
+    descriptorHeapDesc.NumDescriptors = 1;
+    descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    descriptorHeapDesc.NodeMask = 0;
+    throwIfFailed(DXInterfaceAccessor::getDevice()->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&mTextureDH)));
+
+    D3D12_CPU_DESCRIPTOR_HANDLE handleSRV{};
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    srvDesc.Format = resourceDesc.Format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.PlaneSlice = 0;
+    srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    handleSRV = mTextureDH->GetCPUDescriptorHandleForHeapStart();
+    DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture.Get(), &srvDesc, handleSRV);
+
+    D3D12_BOX box = { 0,0,0,(UINT)WIDTH,(UINT)HEIGHT,1 };
+    throwIfFailed(mTexture->WriteToSubresource(0, &box, data.data(), WIDTH * TEXTURE_PIXEL_SIZE, WIDTH * HEIGHT * TEXTURE_PIXEL_SIZE));
+}
+
+Texture::~Texture() { }
+
+void Texture::addToCommandList(ID3D12GraphicsCommandList* commandList, UINT rootParameterIndex) {
+    commandList->SetGraphicsRootDescriptorTable(rootParameterIndex, mTextureDH->GetGPUDescriptorHandleForHeapStart());
+}
+
+} //Graphics 
+} //Framework 

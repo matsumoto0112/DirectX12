@@ -26,6 +26,7 @@
 #include "Framework/Math/Matrix4x4.h"
 #include "Framework/Graphics/DX12/Resource/VertexBuffer.h"
 #include "Framework/Graphics/DX12/Resource/IndexBuffer.h"
+#include "Framework/Graphics/DX12/Resource/Texture.h"
 #include "Framework/Graphics/DX12/Helper.h"
 
 namespace {
@@ -262,14 +263,6 @@ public:
         Framework::Graphics::DX12Manager::getInstance().initialize(window->getHWND(), width, height);
         ID3D12Device* mDevice = Framework::Graphics::DX12Manager::getInstance().getDevice();
         {
-            //SRV
-            D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
-            srvHeapDesc.NumDescriptors = 1;
-            srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-            srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-            throwIfFailed(mDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSRVHeap)));
-            throwIfFailed(mDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSRVHeap2)));
-
             //CBV
             D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc{};
             cbvHeapDesc.NumDescriptors = 1;
@@ -291,65 +284,8 @@ public:
         std::vector<UINT> indices{ 0,1,2,0,2,3 };
         mIndexBuffer = std::make_unique<Framework::Graphics::IndexBuffer>(indices);
 
-        //////テクスチャ読み込み
-        //ComPtr<ID3D12Resource> textureUploadHeap;
-        //ComPtr<ID3D12Resource> textureUploadHeap2;
-        {
-            {
-                constexpr UINT TEXTURE_PIXEL_SIZE = 4;
-                static const std::string TEXTURE_NAME("bg.png");
-                UINT WIDTH = 256;
-                UINT HEIGHT = 256;
-                //テクスチャの生成
-                Framework::Utility::TextureLoader loader;
-                std::vector<BYTE> data = loader.load((std::string)Framework::Define::Path::getInstance().texture + TEXTURE_NAME, &WIDTH, &HEIGHT);
-
-                D3D12_HEAP_PROPERTIES heapPropertices{};
-                heapPropertices.Type = D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_CUSTOM;
-                heapPropertices.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY::D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-                heapPropertices.MemoryPoolPreference = D3D12_MEMORY_POOL::D3D12_MEMORY_POOL_L0;
-                heapPropertices.VisibleNodeMask = 1;
-                heapPropertices.CreationNodeMask = 1;
-
-                D3D12_RESOURCE_DESC resourceDesc{};
-                resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION::D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-                resourceDesc.Width = WIDTH;
-                resourceDesc.Height = HEIGHT;
-                resourceDesc.DepthOrArraySize = 1;
-                resourceDesc.MipLevels = 1;
-                resourceDesc.Format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
-                resourceDesc.Layout = D3D12_TEXTURE_LAYOUT::D3D12_TEXTURE_LAYOUT_UNKNOWN;
-                resourceDesc.SampleDesc.Count = 1;
-                resourceDesc.SampleDesc.Quality = 0;
-                throwIfFailed(mDevice->CreateCommittedResource(&heapPropertices, D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
-                    &resourceDesc, D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&mTexture)));
-
-                D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{};
-                descriptorHeapDesc.NumDescriptors = 1;
-                descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-                descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-                descriptorHeapDesc.NodeMask = 0;
-                throwIfFailed(mDevice->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&mTextureDH)));
-
-                D3D12_CPU_DESCRIPTOR_HANDLE handleSRV{};
-                D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-                srvDesc.Format = resourceDesc.Format;
-                srvDesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2D;
-                srvDesc.Texture2D.MipLevels = 1;
-                srvDesc.Texture2D.MostDetailedMip = 0;
-                srvDesc.Texture2D.PlaneSlice = 0;
-                srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-                srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-                handleSRV = mTextureDH->GetCPUDescriptorHandleForHeapStart();
-                mDevice->CreateShaderResourceView(mTexture.Get(), &srvDesc, handleSRV);
-
-
-                D3D12_BOX box = { 0,0,0,(UINT)WIDTH,(UINT)HEIGHT,1 };
-                throwIfFailed(mTexture->WriteToSubresource(0, &box, data.data(), WIDTH * TEXTURE_PIXEL_SIZE, WIDTH * HEIGHT * TEXTURE_PIXEL_SIZE));
-            }
-            {
-            }
-        }
+        mTexture = std::make_unique<Framework::Graphics::Texture>((std::string)Framework::Define::Path::getInstance().texture + "bg.png");
+        mTexture2 = std::make_unique<Framework::Graphics::Texture>((std::string)Framework::Define::Path::getInstance().texture + "bg2.png");
 
         //コンスタントバッファ作成
         ComPtr<ID3D12Resource> constantBufferHeap;
@@ -409,20 +345,16 @@ protected:
         Framework::Graphics::DX12Manager::getInstance().drawBegin();
         ID3D12GraphicsCommandList* mCommandList = Framework::Graphics::DX12Manager::getInstance().getCommandList();
 
-        //if (mMode) {
-        //    ID3D12DescriptorHeap* heaps[] = { mSRVHeap2.Get() };
-        //    mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
-        //    mCommandList->SetGraphicsRootDescriptorTable(0, mSRVHeap2->GetGPUDescriptorHandleForHeapStart());
-        //}
-        //else {
-        //    ID3D12DescriptorHeap* heaps[] = { mSRVHeap.Get() };
-        //    mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
-        //    mCommandList->SetGraphicsRootDescriptorTable(0, mSRVHeap->GetGPUDescriptorHandleForHeapStart());
-        //}
-
-        ID3D12DescriptorHeap* heaps[] = { mTextureDH.Get() };
-        mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
-        mCommandList->SetGraphicsRootDescriptorTable(0, mTextureDH->GetGPUDescriptorHandleForHeapStart());
+        if (mMode) {
+            ID3D12DescriptorHeap* heaps[] = { mTexture->getDescriptorHeap() };
+            mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
+            mTexture->addToCommandList(mCommandList, 0);
+        }
+        else {
+            ID3D12DescriptorHeap* heaps[] = { mTexture2->getDescriptorHeap() };
+            mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
+            mTexture2->addToCommandList(mCommandList, 0);
+        }
 
         mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         mCommandList->SetGraphicsRootConstantBufferView(1, mConstantBuffer->GetGPUVirtualAddress());
@@ -445,13 +377,9 @@ private:
     struct ShaderObject {
         std::vector<BYTE> code;
     };
-    ComPtr<ID3D12DescriptorHeap> mSRVHeap; //!< テクスチャSRV用
-    ComPtr<ID3D12DescriptorHeap> mSRVHeap2; //!< テクスチャSRV用
+    std::unique_ptr<Framework::Graphics::Texture> mTexture; //!< テクスチャ
+    std::unique_ptr<Framework::Graphics::Texture> mTexture2; //!< テクスチャ
     ComPtr<ID3D12PipelineState> mPipelineState2; //!< パイプラインステート
-    ComPtr<ID3D12Resource> mTexture; //!< テクスチャ
-    ComPtr<ID3D12Resource> mTexture2; //!< テクスチャ
-    ComPtr<ID3D12DescriptorHeap> mTextureDH;
-    ComPtr<ID3D12DescriptorHeap> mTextureDH2;
 
     std::unique_ptr<Framework::Graphics::VertexBuffer> mVertexBuffer; //!< 頂点バッファ
     std::unique_ptr<Framework::Graphics::IndexBuffer> mIndexBuffer; //!< インデックスバッファ
