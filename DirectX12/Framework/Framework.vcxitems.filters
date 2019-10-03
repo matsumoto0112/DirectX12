@@ -29,6 +29,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Color4.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\TextureLoader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Buffer\VertexBuffer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Math\IntVector2.h" />
@@ -78,5 +79,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Helper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\FBXLoader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Buffer\VertexBuffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.h" />
   </ItemGroup>
 </Project>

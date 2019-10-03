@@ -20,6 +20,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Game.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Color4.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Buffer\VertexBuffer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Input\InputManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Input\Joystick.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Input\Keyboard.cpp" />
@@ -50,6 +51,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Game.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Color4.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Buffer\VertexBuffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Helper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Input\ButtonID.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Input\ControllerUtil.h" />

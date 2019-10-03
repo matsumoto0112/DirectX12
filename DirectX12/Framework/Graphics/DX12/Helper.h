@@ -68,6 +68,20 @@ inline D3D12_RESOURCE_DESC createResource(UINT size) {
     return res;
 }
 
+inline D3D12_RESOURCE_BARRIER createResourceBarrier(ID3D12Resource* resource,
+    D3D12_RESOURCE_STATES before,
+    D3D12_RESOURCE_STATES after,
+    UINT subResource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
+    D3D12_RESOURCE_BARRIER_FLAGS flag = D3D12_RESOURCE_BARRIER_FLAGS::D3D12_RESOURCE_BARRIER_FLAG_NONE) {
+    D3D12_RESOURCE_BARRIER result{};
+    result.Type = D3D12_RESOURCE_BARRIER_TYPE::D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    result.Flags = flag;
+    result.Transition.pResource = resource;
+    result.Transition.StateBefore = before;
+    result.Transition.StateAfter = after;
+    result.Transition.Subresource = subResource;
+    return result;
+}
 
 } //Graphics 
 } //Framework 
