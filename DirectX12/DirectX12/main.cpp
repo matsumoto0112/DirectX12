@@ -27,6 +27,7 @@
 #include "Framework/Window/Procedure/CloseProc.h"
 #include "Framework/Utility/IO/TextureLoader.h"
 #include "Framework/Graphics/DX12/Helper.h"
+#include "Framework/Math/Matrix4x4.h"
 
 namespace {
 using namespace Framework::Graphics;
@@ -37,6 +38,12 @@ struct Vertex {
 
 struct ColorBuffer {
     Framework::Graphics::Color4 color;
+};
+
+struct MVP {
+    Framework::Math::Matrix4x4 world;
+    Framework::Math::Matrix4x4 view;
+    Framework::Math::Matrix4x4 proj;
 };
 
 void getHardwareAdapter(IDXGIFactory2* factory, IDXGIAdapter1** ppAdapter) {
@@ -336,11 +343,14 @@ public:
 
             mRTVDescriptorSize = mDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
+            //CBV
             D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc{};
             cbvHeapDesc.NumDescriptors = 1;
             cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
             cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
             throwIfFailed(mDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCBVHeap)));
+
+            throwIfFailed(mDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mMatrixCBVHeap)));
         }
 
         {
@@ -421,12 +431,17 @@ public:
                 0,
                 D3D12_DESCRIPTOR_RANGE_FLAGS::D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
 
-            D3D12_ROOT_PARAMETER1 rootParameter[2];
+            D3D12_ROOT_PARAMETER1 rootParameter[3];
             rootParameter[0] = initParam(1, &range[0], D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_ALL);
-            rootParameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_ALL;
+            rootParameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
             rootParameter[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_CBV;
             rootParameter[1].Descriptor.ShaderRegister = 0;
             rootParameter[1].Descriptor.RegisterSpace = 0;
+            rootParameter[2].ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_VERTEX;
+            rootParameter[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_CBV;
+            rootParameter[2].Descriptor.ShaderRegister = 1;
+            rootParameter[2].Descriptor.RegisterSpace = 0;
+
 
             D3D12_ROOT_SIGNATURE_FLAGS  rootSignatureFlags =
                 D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -630,14 +645,20 @@ public:
                 nullptr,
                 IID_PPV_ARGS(&mConstantBuffer)));
 
-            //D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
-            //cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress();
-            //cbvDesc.SizeInBytes = (sizeof(ColorBuffer) + 255) & ~255;    // CB size is required to be 256-byte aligned.
-            //mDevice->CreateConstantBufferView(&cbvDesc, mCBVHeap->GetCPUDescriptorHandleForHeapStart());
-
             D3D12_RANGE range{ 0,0 };
             throwIfFailed(mConstantBuffer->Map(0, &range, reinterpret_cast<void**>(&mCBVDataBegin)));
             memcpy(mCBVDataBegin, &mColorBuffer, sizeof(mColorBuffer));
+
+            throwIfFailed(mDevice->CreateCommittedResource(
+                &PROPERTY(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD),
+                D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
+                &RESOURCE(256),
+                D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
+                nullptr,
+                IID_PPV_ARGS(&mMatrixConstantBuffer)));
+
+            throwIfFailed(mMatrixConstantBuffer->Map(0, &range, reinterpret_cast<void**>(&mMatrixCBVDataBegin)));
+            memcpy(mMatrixCBVDataBegin, &mMVP, sizeof(mMVP));
         }
 
         //コマンドリストを閉じて実行処理
@@ -681,6 +702,15 @@ protected:
         if (mColorBuffer.color.g >= 1.0f) mColorBuffer.color.g -= 1.0f;
 
         memcpy(mCBVDataBegin, &mColorBuffer, sizeof(mColorBuffer));
+
+        using Framework::Math::Vector3;
+        using Framework::Math::Matrix4x4;
+        mMVP.world = Matrix4x4::transposition(Matrix4x4::createScale(Vector3(mScale, mScale, mScale)));
+        mMVP.view = Matrix4x4::transposition(Matrix4x4::createView({ Vector3(0,0,-10),Vector3(0,0,0),Vector3(0,1,0) }));
+        float ratio = static_cast<float>(Framework::Define::Config::getInstance().screenWidth) / static_cast<float>(Framework::Define::Config::getInstance().screenHeight);
+        mMVP.proj = Matrix4x4::transposition(Matrix4x4::createProjection({ 45.0f,ratio,0.1f,1000.0f }));
+        memcpy(mMatrixCBVDataBegin, &mMVP, sizeof(mMVP));
+        mScale +=0.01f;
     }
     virtual void draw() override {
         throwIfFailed(mCommandAllocator->Reset());
@@ -704,6 +734,7 @@ protected:
         mCommandList->ClearRenderTargetView(rtvHandle, clear, 0, nullptr);
         mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         mCommandList->SetGraphicsRootConstantBufferView(1, mConstantBuffer->GetGPUVirtualAddress());
+        mCommandList->SetGraphicsRootConstantBufferView(2, mMatrixConstantBuffer->GetGPUVirtualAddress());
         mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
         mCommandList->DrawInstanced(3, 1, 0, 0);
 
@@ -765,7 +796,12 @@ private:
     ComPtr<ID3D12DescriptorHeap> mCBVHeap; //!< コンスタントバッファヒープ
     ComPtr<ID3D12Resource> mConstantBuffer; //!< コンスタントバッファ
     UINT* mCBVDataBegin;
+    ComPtr<ID3D12DescriptorHeap> mMatrixCBVHeap; //!< コンスタントバッファヒープ
+    ComPtr<ID3D12Resource> mMatrixConstantBuffer; //!< コンスタントバッファ
+    UINT* mMatrixCBVDataBegin;
     ColorBuffer mColorBuffer;
+    MVP mMVP;
+    float mScale;
 };
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPTSTR, _In_ int) {
