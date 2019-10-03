@@ -7,18 +7,15 @@
 #include <tchar.h>
 #include <d3d12.h>
 #include <dxgi1_4.h>
-#include <d3d12shader.h>
 
 #pragma comment(linker,"/SUBSYSTEM:WINDOWS")
-#pragma comment(lib,"d3d12.lib")
-#pragma comment(lib,"dxgi.lib")
-#pragma comment(lib,"dxguid.lib")
 
 #include "Framework/Define/Config.h"
 #include "Framework/Define/Path.h"
 #include "Framework/Device/GameDevice.h"
 #include "Framework/Game.h"
 #include "Framework/Graphics/Color4.h"
+#include "Framework/Graphics/DX12/DX12Manager.h"
 #include "Framework/Math/Vector3.h"
 #include "Framework/Math/Vector4.h"
 #include "Framework/Utility/IO/ByteReader.h"
@@ -26,10 +23,10 @@
 #include "Framework/Window/Procedure/DestroyProc.h"
 #include "Framework/Window/Procedure/CloseProc.h"
 #include "Framework/Utility/IO/TextureLoader.h"
-#include "Framework/Graphics/DX12/Helper.h"
 #include "Framework/Math/Matrix4x4.h"
 #include "Framework/Graphics/DX12/Buffer/VertexBuffer.h"
-#include "Framework/Graphics/DX12/DX12Manager.h"
+#include "Framework/Graphics/DX12/Buffer/IndexBuffer.h"
+#include "Framework/Graphics/DX12/Helper.h"
 
 namespace {
 using namespace Framework::Graphics;
@@ -284,8 +281,6 @@ public:
 
         //頂点バッファ作成
         {
-            const float ratio = static_cast<float>(width) / static_cast<float>(height);
-
             std::vector<Vertex> vertices{
                  {{-1.0f, 1.0f,0.0f,1.0f},{0.0f,0.0f}},
                  {{ 1.0f, 1.0f,0.0f,1.0f},{1.0f,0.0f}},
@@ -296,28 +291,8 @@ public:
         }
 
         {
-            UINT indices[]{ 0,1,2,0,2,3 };
-            const UINT indexBufferSize = sizeof(indices);
-
-            throwIfFailed(mDevice->CreateCommittedResource(
-                &PROPERTY(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD),
-                D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
-                &RESOURCE(indexBufferSize),
-                D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
-                nullptr,
-                IID_PPV_ARGS(&mIndexBuffer)));
-
-            UINT8* indexDataBegin;
-            D3D12_RANGE range{ 0,0 };
-            throwIfFailed(mIndexBuffer->Map(0, &range, reinterpret_cast<void**>(&indexDataBegin)));
-            memcpy(indexDataBegin, indices, sizeof(indices));
-            mIndexBuffer->Unmap(0, nullptr);
-
-            mIndexBufferView.BufferLocation = mIndexBuffer->GetGPUVirtualAddress();
-            mIndexBufferView.Format = DXGI_FORMAT::DXGI_FORMAT_R32_UINT;
-            mIndexBufferView.SizeInBytes = indexBufferSize;
-
-            mNumIndices = _countof(indices);
+            std::vector<UINT> indices{ 0,1,2,0,2,3 };
+            mIndexBuffer = std::make_unique<Framework::Graphics::IndexBuffer>(indices);
         }
 
         //テクスチャ読み込み
@@ -445,10 +420,9 @@ protected:
         mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         mCommandList->SetGraphicsRootConstantBufferView(1, mConstantBuffer->GetGPUVirtualAddress());
         mCommandList->SetGraphicsRootConstantBufferView(2, mMatrixConstantBuffer->GetGPUVirtualAddress());
-        mVertexBuffer->setCommand(mCommandList);
-        mCommandList->IASetIndexBuffer(&mIndexBufferView);
-        mCommandList->DrawInstanced(3, 1, 0, 0);
-        mCommandList->DrawIndexedInstanced(mNumIndices, 1, 0, 0, 0);
+        mVertexBuffer->addToCommandList(mCommandList);
+        mIndexBuffer->addToCommandList(mCommandList);
+        mIndexBuffer->drawCall(mCommandList);
 
         Framework::Graphics::DX12Manager::getInstance().drawEnd();
 
@@ -467,8 +441,7 @@ private:
     ComPtr<ID3D12DescriptorHeap> mSRVHeap; //!< テクスチャSRV用
     ComPtr<ID3D12PipelineState> mPipelineState2; //!< パイプラインステート
     std::unique_ptr<Framework::Graphics::VertexBuffer> mVertexBuffer; //!< 頂点バッファ
-    ComPtr<ID3D12Resource> mIndexBuffer; //!< インデックスバッファ
-    D3D12_INDEX_BUFFER_VIEW mIndexBufferView; //!< インデックスバッファビュー
+    std::unique_ptr<Framework::Graphics::IndexBuffer> mIndexBuffer; //!< インデックスバッファ
     ComPtr<ID3D12Resource> mTexture; //!< テクスチャ
     ComPtr<ID3D12DescriptorHeap> mCBVHeap; //!< コンスタントバッファヒープ
     ComPtr<ID3D12Resource> mConstantBuffer; //!< コンスタントバッファ

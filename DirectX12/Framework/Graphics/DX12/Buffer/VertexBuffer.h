@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
-#include "Framework/Graphics/DX12/DXWrap.h"
-#include "Framework/Graphics/DX12/Helper.h"
+#include <d3d12.h>
+#include "Framework/Graphics/DX12/DXInterfaceAccessor.h"
 #include "Framework/Utility/Typedef.h"
 
 namespace Framework {
@@ -25,7 +25,7 @@ public:
     /**
     * @brief コマンドリストに登録する
     */
-    void setCommand(ID3D12GraphicsCommandList* commandList);
+    void addToCommandList(ID3D12GraphicsCommandList* commandList);
 private:
     const UINT mVertexBufferSize; //!< 頂点データのメモリサイズ
     ComPtr<ID3D12Resource> mVertexBuffer; //!< 頂点バッファ
@@ -35,8 +35,7 @@ private:
 template<class T>
 inline VertexBuffer::VertexBuffer(const std::vector<T>& vertices)
     :mVertexBufferSize(vertices.size() * sizeof(T)) {
-    ID3D12Device* device = Wrap::getDevice();
-    throwIfFailed(device->CreateCommittedResource(
+    throwIfFailed(DXInterfaceAccessor::getDevice()->CreateCommittedResource(
         &createProperty(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD),
         D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
         &createResource(mVertexBufferSize),

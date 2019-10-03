@@ -23,7 +23,7 @@
       <EnablePREfast>false</EnablePREfast>
     </ClCompile>
     <FxCompile>
-      <ShaderModel>6.3</ShaderModel>
+      <ShaderModel>5.0</ShaderModel>
       <ObjectFileOutput>$(OutDir)\cso\%(RelativeDir)\%(Filename).cso</ObjectFileOutput>
     </FxCompile>
     <Link />
@@ -36,6 +36,7 @@
     </PostBuildEvent>
     <Link>
       <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>d3d12.lib;dxgi.lib;dxguid.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
