@@ -32,6 +32,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXInterfaceAccessor.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\IndexBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\VertexBuffer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Math\IntVector2.h" />
@@ -81,7 +82,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Helper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXInterfaceAccessor.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\IDX12Resource.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\IndexBuffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\VertexBuffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\Texture.h" />

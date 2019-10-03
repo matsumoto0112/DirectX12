@@ -2,7 +2,6 @@
 #include <vector>
 #include <d3d12.h>
 #include "Framework/Graphics/DX12/DXInterfaceAccessor.h"
-#include "Framework/Graphics/DX12/IDX12Resource.h"
 #include "Framework/Utility/Typedef.h"
 
 namespace Framework {
@@ -12,7 +11,7 @@ namespace Graphics {
 * @class VertexBuffer
 * @brief 頂点バッファ
 */
-class VertexBuffer : public IDX12Resource {
+class VertexBuffer {
 public:
     /**
     * @brief コンストラクタ
@@ -22,11 +21,11 @@ public:
     /**
     * @brief デストラクタ
     */
-    virtual ~VertexBuffer();
+    ~VertexBuffer();
     /**
     * @brief コマンドリストに登録する
     */
-    virtual void addToCommandList(ID3D12GraphicsCommandList* commandList) const override;
+    void addToCommandList(ID3D12GraphicsCommandList* commandList) const;
 private:
     const UINT mVertexBufferSize; //!< 頂点データのメモリサイズ
     ComPtr<ID3D12Resource> mVertexBuffer; //!< 頂点バッファ

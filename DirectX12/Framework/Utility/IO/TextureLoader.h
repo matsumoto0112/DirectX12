@@ -24,6 +24,8 @@ public:
     /**
     * @brief テクスチャ読み込み
     * @param filepath ファイルへのパス
+    * @param width テクスチャの幅
+    * @param height テクスチャの高さ
     */
     std::vector<BYTE> load(const std::string& filepath, _Out_ UINT* width, _Out_ UINT* height);
 private:

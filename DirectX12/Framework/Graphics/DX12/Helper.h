@@ -83,5 +83,21 @@ inline D3D12_RESOURCE_BARRIER createResourceBarrier(ID3D12Resource* resource,
     return result;
 }
 
+///**
+//* @brief 中間リソースの要求メモリサイズを取得する
+//*/
+//inline UINT64 getRequiredIntermediateSize(ID3D12Resource* resource, UINT firstSubresource, UINT numSubresource) {
+//    D3D12_RESOURCE_DESC desc = resource->GetDesc();
+//    UINT64 requiredSize = 0;
+//
+//    ID3D12Device* device = nullptr;
+//    resource->GetDevice(__uuidof(*device), reinterpret_cast<void**>(&device));
+//    device->GetCopyableFootprints(&desc, firstSubresource, numSubresource, 0, nullptr, nullptr, nullptr, &requiredSize);
+//    device->Release();
+//
+//    return requiredSize;
+//}
+
+
 } //Graphics 
 } //Framework 

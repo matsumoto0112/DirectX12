@@ -20,6 +20,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Game.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Color4.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\IndexBuffer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\Texture.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\VertexBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXInterfaceAccessor.cpp" />
@@ -58,7 +59,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Helper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXInterfaceAccessor.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\IDX12Resource.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Input\ButtonID.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Input\ControllerUtil.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Input\ID.h" />
