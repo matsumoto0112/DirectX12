@@ -57,6 +57,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Helper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXInterfaceAccessor.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\IDX12Resource.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Input\ButtonID.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Input\ControllerUtil.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Input\ID.h" />

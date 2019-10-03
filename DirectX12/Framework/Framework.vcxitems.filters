@@ -84,5 +84,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Helper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Buffer\IndexBuffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXInterfaceAccessor.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\IDX12Resource.h" />
   </ItemGroup>
 </Project>

@@ -29,19 +29,38 @@ public:
     * @param height ウィンドウの高さ
     */
     void initialize(HWND hWnd, UINT width, UINT height);
+    /**
+    * @brief 終了処理
+    */
     void finalize();
+    /**
+    * @brief フェンス作成
+    */
     void createFence();
     /**
     * @brief デバイスを取得する
     */
     ID3D12Device* getDevice() const { return mDevice.Get(); }
+    /**
+    * @brief コマンドリストを取得する
+    */
     ID3D12GraphicsCommandList* getCommandList() const { return mCommandList.Get(); }
+    /**
+    * @brief 描画開始
+    */
     void drawBegin();
-
+    /**
+    * @brief 描画終了
+    */
     void drawEnd();
-
+    /**
+    * @brief コマンドリストを実行する
+    */
     void executeCommand();
 private:
+    /**
+    * @brief フレーム経過まで待機する
+    */
     void waitForPreviousFrame();
 private:
     static constexpr UINT FRAME_COUNT = 2;

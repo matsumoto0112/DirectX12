@@ -29,11 +29,11 @@ IndexBuffer::IndexBuffer(const std::vector<UINT>& indices)
 
 IndexBuffer::~IndexBuffer() { }
 
-void IndexBuffer::addToCommandList(ID3D12GraphicsCommandList * commandList) {
+void IndexBuffer::addToCommandList(ID3D12GraphicsCommandList* commandList) const {
     commandList->IASetIndexBuffer(&mIndexBufferView);
 }
 
-void IndexBuffer::drawCall(ID3D12GraphicsCommandList * commandList) {
+void IndexBuffer::drawCall(ID3D12GraphicsCommandList* commandList) {
     commandList->DrawIndexedInstanced(mIndexNum, 1, 0, 0, 0);
 }
 

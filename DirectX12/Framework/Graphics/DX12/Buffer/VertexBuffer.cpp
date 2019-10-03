@@ -5,7 +5,7 @@ namespace Graphics {
 
 VertexBuffer::~VertexBuffer() { }
 
-void VertexBuffer::addToCommandList(ID3D12GraphicsCommandList* commandList) {
+void VertexBuffer::addToCommandList(ID3D12GraphicsCommandList* commandList) const {
     commandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
 }
 
