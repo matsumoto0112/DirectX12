@@ -1,24 +1,25 @@
 #pragma once
 
 namespace Framework {
-namespace Utility {
+namespace Graphics {
 
 /**
-* @class FBXLoader
-* @brief discription
+* @class Texture
+* @brief テクスチャクラス
 */
-class FBXLoader {
+class Texture {
 public:
     /**
     * @brief コンストラクタ
     */
-    FBXLoader();
+    Texture();
     /**
     * @brief デストラクタ
     */
-    ~FBXLoader();
+    ~Texture();
 private:
 
 };
-} //Utility 
+
+} //Graphics 
 } //Framework 

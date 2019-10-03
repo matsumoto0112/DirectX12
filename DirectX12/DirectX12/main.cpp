@@ -24,8 +24,8 @@
 #include "Framework/Window/Procedure/CloseProc.h"
 #include "Framework/Utility/IO/TextureLoader.h"
 #include "Framework/Math/Matrix4x4.h"
-#include "Framework/Graphics/DX12/Buffer/VertexBuffer.h"
-#include "Framework/Graphics/DX12/Buffer/IndexBuffer.h"
+#include "Framework/Graphics/DX12/Resource/VertexBuffer.h"
+#include "Framework/Graphics/DX12/Resource/IndexBuffer.h"
 #include "Framework/Graphics/DX12/Helper.h"
 
 namespace {
@@ -281,20 +281,15 @@ public:
         }
 
         //頂点バッファ作成
-        {
-            std::vector<Vertex> vertices{
-                 {{-1.0f, 1.0f,0.0f,1.0f},{0.0f,0.0f}},
-                 {{ 1.0f, 1.0f,0.0f,1.0f},{1.0f,0.0f}},
-                 {{ 1.0f,-1.0f,0.0f,1.0f},{1.0f,1.0f}},
-                 {{-1.0f,-1.0f,0.0f,1.0f},{0.0f,1.0f}}
-            };
-            mVertexBuffer = std::make_unique<Framework::Graphics::VertexBuffer>(vertices);
-        }
-
-        {
-            std::vector<UINT> indices{ 0,1,2,0,2,3 };
-            mIndexBuffer = std::make_unique<Framework::Graphics::IndexBuffer>(indices);
-        }
+        std::vector<Vertex> vertices{
+             {{-1.0f, 1.0f,0.0f,1.0f},{0.0f,0.0f}},
+             {{ 1.0f, 1.0f,0.0f,1.0f},{1.0f,0.0f}},
+             {{ 1.0f,-1.0f,0.0f,1.0f},{1.0f,1.0f}},
+             {{-1.0f,-1.0f,0.0f,1.0f},{0.0f,1.0f}}
+        };
+        mVertexBuffer = std::make_unique<Framework::Graphics::VertexBuffer>(vertices);
+        std::vector<UINT> indices{ 0,1,2,0,2,3 };
+        mIndexBuffer = std::make_unique<Framework::Graphics::IndexBuffer>(indices);
 
         //テクスチャ読み込み
         ComPtr<ID3D12Resource> textureUploadHeap;
@@ -483,7 +478,7 @@ protected:
         else {
             ID3D12DescriptorHeap* heaps[] = { mSRVHeap.Get() };
             mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
-        mCommandList->SetGraphicsRootDescriptorTable(0, mSRVHeap->GetGPUDescriptorHandleForHeapStart());
+            mCommandList->SetGraphicsRootDescriptorTable(0, mSRVHeap->GetGPUDescriptorHandleForHeapStart());
         }
 
         mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

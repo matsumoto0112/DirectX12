@@ -19,8 +19,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Device\GameDevice.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Game.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Color4.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Buffer\IndexBuffer.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Buffer\VertexBuffer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\IndexBuffer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\VertexBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXInterfaceAccessor.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Input\InputManager.cpp" />
@@ -52,8 +52,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Device\GameDevice.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Game.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Color4.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Buffer\IndexBuffer.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Buffer\VertexBuffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\IndexBuffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\Texture.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\VertexBuffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Helper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXInterfaceAccessor.h" />
@@ -85,7 +86,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\FPS.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\ByteReader.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\FBXLoader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\TextureLoader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Property.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Resource\ResourceManager.h" />
