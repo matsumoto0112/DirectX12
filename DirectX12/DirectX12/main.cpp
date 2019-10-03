@@ -268,6 +268,7 @@ public:
             srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
             srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
             throwIfFailed(mDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSRVHeap)));
+            throwIfFailed(mDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSRVHeap2)));
 
             //CBV
             D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc{};
@@ -297,62 +298,123 @@ public:
 
         //テクスチャ読み込み
         ComPtr<ID3D12Resource> textureUploadHeap;
+        ComPtr<ID3D12Resource> textureUploadHeap2;
         {
-            constexpr UINT TEXTURE_PIXEL_SIZE = 4;
-            static const std::string TEXTURE_NAME("bg.png");
-            UINT WIDTH = 256;
-            UINT HEIGHT = 256;
-            //テクスチャの生成
-            Framework::Utility::TextureLoader loader;
-            std::vector<BYTE> data = loader.load((std::string)Framework::Define::Path::getInstance().texture + TEXTURE_NAME, &WIDTH, &HEIGHT);
+            {
 
-            D3D12_RESOURCE_DESC desc{};
-            desc.MipLevels = 1;
-            desc.Format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
-            desc.Width = WIDTH;
-            desc.Height = HEIGHT;
-            desc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
-            desc.DepthOrArraySize = 1;
-            desc.SampleDesc.Count = 1;
-            desc.SampleDesc.Quality = 0;
-            desc.Dimension = D3D12_RESOURCE_DIMENSION::D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+                constexpr UINT TEXTURE_PIXEL_SIZE = 4;
+                static const std::string TEXTURE_NAME("bg.png");
+                UINT WIDTH = 256;
+                UINT HEIGHT = 256;
+                //テクスチャの生成
+                Framework::Utility::TextureLoader loader;
+                std::vector<BYTE> data = loader.load((std::string)Framework::Define::Path::getInstance().texture + TEXTURE_NAME, &WIDTH, &HEIGHT);
 
-            throwIfFailed(mDevice->CreateCommittedResource(
-                &PROPERTY(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_DEFAULT),
-                D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
-                &desc,
-                D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST,
-                nullptr,
-                IID_PPV_ARGS(&mTexture)));
+                D3D12_RESOURCE_DESC desc{};
+                desc.MipLevels = 1;
+                desc.Format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
+                desc.Width = WIDTH;
+                desc.Height = HEIGHT;
+                desc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
+                desc.DepthOrArraySize = 1;
+                desc.SampleDesc.Count = 1;
+                desc.SampleDesc.Quality = 0;
+                desc.Dimension = D3D12_RESOURCE_DIMENSION::D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 
-            const UINT64 uploadBufferSize = getRequiredIntermediateSize(mTexture.Get(), 0, 1);
+                throwIfFailed(mDevice->CreateCommittedResource(
+                    &PROPERTY(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_DEFAULT),
+                    D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
+                    &desc,
+                    D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST,
+                    nullptr,
+                    IID_PPV_ARGS(&mTexture)));
 
-            //GPUアップロードバッファ作成
-            throwIfFailed(mDevice->CreateCommittedResource(
-                &PROPERTY(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD),
-                D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
-                &RESOURCE(uploadBufferSize),
-                D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
-                nullptr,
-                IID_PPV_ARGS(&textureUploadHeap)));
+                const UINT64 uploadBufferSize = getRequiredIntermediateSize(mTexture.Get(), 0, 1);
 
-            std::vector<UINT8> texture = data;
+                //GPUアップロードバッファ作成
+                throwIfFailed(mDevice->CreateCommittedResource(
+                    &PROPERTY(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD),
+                    D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
+                    &RESOURCE(uploadBufferSize),
+                    D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
+                    nullptr,
+                    IID_PPV_ARGS(&textureUploadHeap)));
 
-            D3D12_SUBRESOURCE_DATA sub{};
-            sub.pData = &texture[0];
-            sub.RowPitch = WIDTH * TEXTURE_PIXEL_SIZE;
-            sub.SlicePitch = sub.RowPitch * HEIGHT;
-            updateSubresource(Framework::Graphics::DX12Manager::getInstance().getCommandList(), mTexture.Get(), textureUploadHeap.Get(), 0, 0, 1, &sub);
+                std::vector<UINT8> texture = data;
 
-            Framework::Graphics::DX12Manager::getInstance().getCommandList()->ResourceBarrier(1, &BARRIER(mTexture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+                D3D12_SUBRESOURCE_DATA sub{};
+                sub.pData = &texture[0];
+                sub.RowPitch = WIDTH * TEXTURE_PIXEL_SIZE;
+                sub.SlicePitch = sub.RowPitch * HEIGHT;
+                updateSubresource(Framework::Graphics::DX12Manager::getInstance().getCommandList(), mTexture.Get(), textureUploadHeap.Get(), 0, 0, 1, &sub);
+
+                Framework::Graphics::DX12Manager::getInstance().getCommandList()->ResourceBarrier(1, &BARRIER(mTexture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
 
-            D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-            srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-            srvDesc.Format = desc.Format;
-            srvDesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2D;
-            srvDesc.Texture2D.MipLevels = 1;
-            mDevice->CreateShaderResourceView(mTexture.Get(), &srvDesc, mSRVHeap->GetCPUDescriptorHandleForHeapStart());
+                D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+                srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                srvDesc.Format = desc.Format;
+                srvDesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2D;
+                srvDesc.Texture2D.MipLevels = 1;
+                mDevice->CreateShaderResourceView(mTexture.Get(), &srvDesc, mSRVHeap->GetCPUDescriptorHandleForHeapStart());
+            }
+            {
+                constexpr UINT TEXTURE_PIXEL_SIZE = 4;
+                static const std::string TEXTURE_NAME("bg2.png");
+                UINT WIDTH = 256;
+                UINT HEIGHT = 256;
+                //テクスチャの生成
+                Framework::Utility::TextureLoader loader;
+                std::vector<BYTE> data = loader.load((std::string)Framework::Define::Path::getInstance().texture + TEXTURE_NAME, &WIDTH, &HEIGHT);
+
+                D3D12_RESOURCE_DESC desc{};
+                desc.MipLevels = 1;
+                desc.Format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
+                desc.Width = WIDTH;
+                desc.Height = HEIGHT;
+                desc.Flags = D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_NONE;
+                desc.DepthOrArraySize = 1;
+                desc.SampleDesc.Count = 1;
+                desc.SampleDesc.Quality = 0;
+                desc.Dimension = D3D12_RESOURCE_DIMENSION::D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+
+                throwIfFailed(mDevice->CreateCommittedResource(
+                    &PROPERTY(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_DEFAULT),
+                    D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
+                    &desc,
+                    D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST,
+                    nullptr,
+                    IID_PPV_ARGS(&mTexture2)));
+
+                const UINT64 uploadBufferSize = getRequiredIntermediateSize(mTexture2.Get(), 0, 1);
+
+                //GPUアップロードバッファ作成
+                throwIfFailed(mDevice->CreateCommittedResource(
+                    &PROPERTY(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD),
+                    D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
+                    &RESOURCE(uploadBufferSize),
+                    D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
+                    nullptr,
+                    IID_PPV_ARGS(&textureUploadHeap2)));
+
+                std::vector<UINT8> texture = data;
+
+                D3D12_SUBRESOURCE_DATA sub{};
+                sub.pData = &texture[0];
+                sub.RowPitch = WIDTH * TEXTURE_PIXEL_SIZE;
+                sub.SlicePitch = sub.RowPitch * HEIGHT;
+                updateSubresource(Framework::Graphics::DX12Manager::getInstance().getCommandList(), mTexture2.Get(), textureUploadHeap2.Get(), 0, 0, 1, &sub);
+
+                Framework::Graphics::DX12Manager::getInstance().getCommandList()->ResourceBarrier(1, &BARRIER(mTexture2.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+
+
+                D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+                srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                srvDesc.Format = desc.Format;
+                srvDesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_TEXTURE2D;
+                srvDesc.Texture2D.MipLevels = 1;
+                mDevice->CreateShaderResourceView(mTexture2.Get(), &srvDesc, mSRVHeap2->GetCPUDescriptorHandleForHeapStart());
+            }
         }
 
         //コンスタントバッファ作成
@@ -413,10 +475,17 @@ protected:
         Framework::Graphics::DX12Manager::getInstance().drawBegin();
         ID3D12GraphicsCommandList* mCommandList = Framework::Graphics::DX12Manager::getInstance().getCommandList();
 
-        ID3D12DescriptorHeap* heaps[] = { mSRVHeap.Get() };
-        mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
-
+        if (mMode) {
+            ID3D12DescriptorHeap* heaps[] = { mSRVHeap2.Get() };
+            mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
+            mCommandList->SetGraphicsRootDescriptorTable(0, mSRVHeap2->GetGPUDescriptorHandleForHeapStart());
+        }
+        else {
+            ID3D12DescriptorHeap* heaps[] = { mSRVHeap.Get() };
+            mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
         mCommandList->SetGraphicsRootDescriptorTable(0, mSRVHeap->GetGPUDescriptorHandleForHeapStart());
+        }
+
         mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         mCommandList->SetGraphicsRootConstantBufferView(1, mConstantBuffer->GetGPUVirtualAddress());
         mCommandList->SetGraphicsRootConstantBufferView(2, mMatrixConstantBuffer->GetGPUVirtualAddress());
@@ -439,10 +508,12 @@ private:
         std::vector<BYTE> code;
     };
     ComPtr<ID3D12DescriptorHeap> mSRVHeap; //!< テクスチャSRV用
+    ComPtr<ID3D12DescriptorHeap> mSRVHeap2; //!< テクスチャSRV用
     ComPtr<ID3D12PipelineState> mPipelineState2; //!< パイプラインステート
+    ComPtr<ID3D12Resource> mTexture; //!< テクスチャ
+    ComPtr<ID3D12Resource> mTexture2; //!< テクスチャ
     std::unique_ptr<Framework::Graphics::VertexBuffer> mVertexBuffer; //!< 頂点バッファ
     std::unique_ptr<Framework::Graphics::IndexBuffer> mIndexBuffer; //!< インデックスバッファ
-    ComPtr<ID3D12Resource> mTexture; //!< テクスチャ
     ComPtr<ID3D12DescriptorHeap> mCBVHeap; //!< コンスタントバッファヒープ
     ComPtr<ID3D12Resource> mConstantBuffer; //!< コンスタントバッファ
     UINT* mCBVDataBegin;
