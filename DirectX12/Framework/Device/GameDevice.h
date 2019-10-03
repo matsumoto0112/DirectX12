@@ -5,15 +5,10 @@
 #include <memory>
 #include <string>
 #include "Framework/Utility/Singleton.h"
+#include "Framework/Input/InputManager.h"
+#include "Framework/Window/Window.h"
 
 namespace Framework {
-namespace Window {
-class Window;
-} //Window 
-namespace Input {
-class InputManager;
-} //Input 
-
 namespace Device {
 /**
 * @class GameDevice

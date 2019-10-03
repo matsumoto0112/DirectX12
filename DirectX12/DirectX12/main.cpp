@@ -538,6 +538,12 @@ public:
             psoDesc.RTVFormats[0] = DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM;
             psoDesc.SampleDesc.Count = 1;
             throwIfFailed(mDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPipelineState)));
+
+            reader = Framework::Utility::ByteReader((std::string)Framework::Define::Path::getInstance().shader + "PixelShader2.cso");
+            std::vector<BYTE> code = reader.get();
+            psoDesc.PS.pShaderBytecode = code.data();
+            psoDesc.PS.BytecodeLength = code.size();
+            throwIfFailed(mDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPipelineState2)));
         }
 
         //コマンドリスト作成
@@ -710,7 +716,11 @@ protected:
         float ratio = static_cast<float>(Framework::Define::Config::getInstance().screenWidth) / static_cast<float>(Framework::Define::Config::getInstance().screenHeight);
         mMVP.proj = Matrix4x4::transposition(Matrix4x4::createProjection({ 45.0f,ratio,0.1f,1000.0f }));
         memcpy(mMatrixCBVDataBegin, &mMVP, sizeof(mMVP));
-        mScale +=0.01f;
+        mScale += 0.01f;
+
+        if (Framework::Device::GameDevice::getInstance().getInputManager()->getKeyboard().getKeyDown(Framework::Input::KeyCode::A)) {
+            mMode = !mMode;
+        }
     }
     virtual void draw() override {
         throwIfFailed(mCommandAllocator->Reset());
@@ -719,6 +729,13 @@ protected:
 
         ID3D12DescriptorHeap* heaps[] = { mSRVHeap.Get() };
         mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
+
+        if (mMode) {
+            mCommandList->SetPipelineState(mPipelineState.Get());
+        }
+        else {
+            mCommandList->SetPipelineState(mPipelineState2.Get());
+        }
 
         mCommandList->SetGraphicsRootDescriptorTable(0, mSRVHeap->GetGPUDescriptorHandleForHeapStart());
         mCommandList->RSSetViewports(1, &mViewport);
@@ -784,6 +801,7 @@ private:
     ShaderObject mVertexShader;
     ShaderObject mPixelShader;
     ComPtr<ID3D12PipelineState> mPipelineState; //!< パイプラインステート
+    ComPtr<ID3D12PipelineState> mPipelineState2; //!< パイプラインステート
     ComPtr<ID3D12GraphicsCommandList> mCommandList; //!< コマンドリスト
     ComPtr<ID3D12Resource> mVertexBuffer; //!< 頂点バッファ
     D3D12_VERTEX_BUFFER_VIEW mVertexBufferView; //!< 頂点バッファビュー
@@ -802,6 +820,7 @@ private:
     ColorBuffer mColorBuffer;
     MVP mMVP;
     float mScale;
+    bool mMode;
 };
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPTSTR, _In_ int) {
