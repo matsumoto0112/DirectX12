@@ -75,5 +75,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Resource\ResourceManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\TextureLoader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Helper.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\FBXLoader.h" />
   </ItemGroup>
 </Project>

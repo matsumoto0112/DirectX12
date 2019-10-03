@@ -76,6 +76,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\FPS.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\ByteReader.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\FBXLoader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\TextureLoader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Property.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Resource\ResourceManager.h" />
