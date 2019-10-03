@@ -80,5 +80,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\FBXLoader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Buffer\VertexBuffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXWrap.h" />
   </ItemGroup>
 </Project>

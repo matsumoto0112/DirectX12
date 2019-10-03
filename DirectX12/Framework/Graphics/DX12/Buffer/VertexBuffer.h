@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include <d3d12.h>
+#include "Framework/Graphics/DX12/DXWrap.h"
 #include "Framework/Graphics/DX12/Helper.h"
 #include "Framework/Utility/Typedef.h"
 
@@ -17,7 +17,7 @@ public:
     * @brief コンストラクタ
     */
     template <class T>
-    VertexBuffer(ID3D12Device* device, const std::vector<T>& vertices);
+    VertexBuffer(const std::vector<T>& vertices);
     /**
     * @brief デストラクタ
     */
@@ -33,8 +33,9 @@ private:
 };
 
 template<class T>
-inline VertexBuffer::VertexBuffer(ID3D12Device* device, const std::vector<T>& vertices)
+inline VertexBuffer::VertexBuffer(const std::vector<T>& vertices)
     :mVertexBufferSize(vertices.size() * sizeof(T)) {
+    ID3D12Device* device = Wrap::getDevice();
     throwIfFailed(device->CreateCommittedResource(
         &createProperty(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD),
         D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,

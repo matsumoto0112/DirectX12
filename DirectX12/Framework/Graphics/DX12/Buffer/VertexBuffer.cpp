@@ -1,4 +1,5 @@
 #include "VertexBuffer.h"
+#include "Framework/Graphics/DX12/DXWrap.h"
 
 namespace Framework {
 namespace Graphics {
