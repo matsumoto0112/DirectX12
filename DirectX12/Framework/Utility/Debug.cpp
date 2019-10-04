@@ -1,7 +1,12 @@
 #include "Debug.h"
+#include <locale.h>
 #include <crtdbg.h>
 #include <Windows.h>
 #include <sstream>
+
+namespace {
+static constexpr int MAX_STRING_LENGTH = 1024;
+}
 
 namespace Framework {
 namespace Utility {
@@ -12,11 +17,16 @@ void errorWindow(bool condition, const std::string& message) {
 
 void Debug::assertion(const std::string& funcName, int line,
     bool condition, const std::string& message) {
-    _ASSERT_EXPR(condition, errorMessage(funcName, line, message).c_str());
+    if (condition)return;
+    //string‚ðunicode ‚É•ÏŠ·‚·‚é
+    wchar_t ch[MAX_STRING_LENGTH]{ 0x00 };
+    std::string str = errorMessage(funcName, line, message);
+    MultiByteToWideChar(CP_THREAD_ACP, MB_PRECOMPOSED, str.c_str(), str.length(), ch, MAX_STRING_LENGTH);
+    _ASSERT_EXPR(condition, ch);
 }
 
 void Debug::debugLog(const std::string& funcName, int line, const std::string& message) {
-    _RPT0(_CRT_WARN, errorMessage(funcName, line, message).c_str());
+    _RPT0(_CRT_WARN, errorMessage(funcName, line, message));
 }
 
 void Debug::errorWindow(const std::string& funcName, int line,

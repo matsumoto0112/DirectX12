@@ -1,8 +1,10 @@
 #pragma once
 #include <d3d12.h>
-#include "Framework/Utility/Typedef.h"
+#include <typeinfo.h>
 #include "Framework/Graphics/DX12/DXInterfaceAccessor.h"
 #include "Framework/Graphics/DX12/Helper.h"
+#include "Framework/Utility/Debug.h"
+#include "Framework/Utility/Typedef.h"
 
 namespace Framework {
 namespace Graphics {
@@ -32,13 +34,15 @@ public:
     */
     void addToCommandList(ID3D12GraphicsCommandList* commandList, UINT rootParameterIndex);
 private:
+    const std::type_info& typeInfo;
     ComPtr<ID3D12DescriptorHeap> mCBVHeap; //!< コンスタントバッファヒープ
     ComPtr<ID3D12Resource> mConstantBuffer; //!< コンスタントバッファ
     UINT* mCBVDataBegin;
 };
 
 template<class T>
-inline ConstantBuffer::ConstantBuffer(const T& bufferStructure) {
+inline ConstantBuffer::ConstantBuffer(const T& bufferStructure)
+    :typeInfo(typeid(T)) {
     //CBV
     D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc{};
     cbvHeapDesc.NumDescriptors = 1;
@@ -61,6 +65,7 @@ inline ConstantBuffer::ConstantBuffer(const T& bufferStructure) {
 
 template<class T>
 inline void ConstantBuffer::updateBuffer(const T& data) {
+    MY_ASSERTION(typeInfo == typeid(T), "test");
     memcpy(mCBVDataBegin, &data, sizeof(T));
 }
 
