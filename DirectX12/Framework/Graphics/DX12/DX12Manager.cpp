@@ -194,11 +194,11 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
     rootParameter[0] = initParam(1, &range[0], D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_ALL);
     rootParameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameter[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameter[1].Descriptor.ShaderRegister = 0;
+    rootParameter[1].Descriptor.ShaderRegister = 1;
     rootParameter[1].Descriptor.RegisterSpace = 0;
     rootParameter[2].ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_VERTEX;
     rootParameter[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_CBV;
-    rootParameter[2].Descriptor.ShaderRegister = 1;
+    rootParameter[2].Descriptor.ShaderRegister = 0;
     rootParameter[2].Descriptor.RegisterSpace = 0;
 
 

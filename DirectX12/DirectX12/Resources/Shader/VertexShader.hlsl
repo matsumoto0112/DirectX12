@@ -1,9 +1,4 @@
-cbuffer MAPMatrix : register(b1)
-{
-    matrix world;
-    matrix view;
-    matrix proj;
-}
+#include "Utility/ShaderDefine.hlsli"
 
 struct VSInput
 {

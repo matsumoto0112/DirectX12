@@ -1,7 +1,4 @@
-cbuffer Color : register(b0)
-{
-    float4 color;
-}
+#include "Utility/ShaderDefine.hlsli"
 
 Texture2D tex : register(t0);
 SamplerState samplerState : register(s0);

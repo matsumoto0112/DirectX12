@@ -30,4 +30,7 @@
     <FxCompile Include="Resources\Shader\VertexShader.hlsl" />
     <FxCompile Include="Resources\Shader\PixelShader2.hlsl" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Shader\Utility\ShaderDefine.hlsli" />
+  </ItemGroup>
 </Project>
