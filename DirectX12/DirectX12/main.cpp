@@ -34,6 +34,7 @@ namespace {
 using namespace Framework::Graphics;
 struct Vertex {
     Framework::Math::Vector4 pos;
+    Framework::Math::Vector2 uv;
     Framework::Graphics::Color4 color;
 };
 
@@ -79,33 +80,40 @@ public:
         Framework::Graphics::DX12Manager::getInstance().waitForPreviousFrame();
         ID3D12Device* mDevice = Framework::Graphics::DX12Manager::getInstance().getDevice();
 
-        std::vector<Vertex> vertices
-        {
-            {{-0.5f,   0.5f,  -0.5f,  1.0f} ,Framework::Graphics::Color4(1.0f,0.0f,0.0f,1.0f)},
-            {{0.5f,    0.5f,  -0.5f,  1.0f} ,Framework::Graphics::Color4(0.0f,1.0f,0.0f,1.0f)},
-            {{0.5f,    -0.5f,  -0.5f,  1.0f},Framework::Graphics::Color4(0.0f,0.0f,1.0f,1.0f) },
-            {{-0.5f,   -0.5f,  -0.5f,  1.0f} ,Framework::Graphics::Color4(0.0f,1.0f,1.0f,1.0f)},
-            {{-0.5f,    0.5f,   0.5f,  1.0f} ,Framework::Graphics::Color4(1.0f,1.0f,0.0f,1.0f)},
-            {{0.5f,     0.5f,   0.5f,  1.0f} ,Framework::Graphics::Color4(1.0f,0.0f,1.0f,1.0f)},
-            {{0.5f,    -0.5f,   0.5f,  1.0f},Framework::Graphics::Color4(1.0f,1.0f,1.0f,1.0f) },
-            {{-0.5f,   -0.5f,   0.5f,  1.0f},Framework::Graphics::Color4(0.0f,0.0f,0.0f,1.0f) },
-        };
-        std::vector<UINT> indices
-        {
-            0,1,2,
-            0,2,3,
-            4,0,3,
-            4,3,7,
-            5,4,7,
-            5,7,6,
-            1,5,6,
-            1,6,2,
-            3,2,6,
-            3,6,7,
-            4,5,1,
-            4,1,0,
+        //std::vector<Vertex> vertices
+        //{
+        //    {{-0.5f,   0.5f,  -0.5f,  1.0f} ,Framework::Graphics::Color4(1.0f,0.0f,0.0f,1.0f)},
+        //    {{0.5f,    0.5f,  -0.5f,  1.0f} ,Framework::Graphics::Color4(0.0f,1.0f,0.0f,1.0f)},
+        //    {{0.5f,    -0.5f,  -0.5f,  1.0f},Framework::Graphics::Color4(0.0f,0.0f,1.0f,1.0f) },
+        //    {{-0.5f,   -0.5f,  -0.5f,  1.0f} ,Framework::Graphics::Color4(0.0f,1.0f,1.0f,1.0f)},
+        //    {{-0.5f,    0.5f,   0.5f,  1.0f} ,Framework::Graphics::Color4(1.0f,1.0f,0.0f,1.0f)},
+        //    {{0.5f,     0.5f,   0.5f,  1.0f} ,Framework::Graphics::Color4(1.0f,0.0f,1.0f,1.0f)},
+        //    {{0.5f,    -0.5f,   0.5f,  1.0f},Framework::Graphics::Color4(1.0f,1.0f,1.0f,1.0f) },
+        //    {{-0.5f,   -0.5f,   0.5f,  1.0f},Framework::Graphics::Color4(0.0f,0.0f,0.0f,1.0f) },
+        //};
+        //std::vector<UINT> indices
+        //{
+        //    0,1,2,
+        //    0,2,3,
+        //    4,0,3,
+        //    4,3,7,
+        //    5,4,7,
+        //    5,7,6,
+        //    1,5,6,
+        //    1,6,2,
+        //    3,2,6,
+        //    3,6,7,
+        //    4,5,1,
+        //    4,1,0,
+        //};
+        std::vector<Vertex> vertices{
+            {{-0.5f,0.5f,0.0f,1.0f},{0.0f,0.0f},Framework::Graphics::Color4(1.0f,0.0f,0.0f,1.0f) },
+            {{0.5f,0.5f,0.0f,1.0f},{1.0f,0.0f},Framework::Graphics::Color4(1.0f,0.0f,0.0f,1.0f) },
+            {{0.5f,-0.5f,0.0f,1.0f},{1.0f,1.0f},Framework::Graphics::Color4(1.0f,0.0f,0.0f,1.0f) },
+            {{-0.5f,-0.5f,0.0f,1.0f},{0.0f,1.0f},Framework::Graphics::Color4(1.0f,0.0f,0.0f,1.0f) },
         };
 
+        std::vector<UINT> indices{ 0,1,2,0,2,3 };
         mVertexBuffer = std::make_unique<Framework::Graphics::VertexBuffer>(vertices);
         mIndexBuffer = std::make_unique<Framework::Graphics::IndexBuffer>(indices, Framework::Graphics::PrimitiveTolopolyType::TriangleList);
 
@@ -125,8 +133,6 @@ protected:
         mColorBuffer.color.g += 0.005f;
         if (mColorBuffer.color.g >= 1.0f) mColorBuffer.color.g -= 1.0f;
 
-        //mColorConstantBuffer->updateBuffer(mColorBuffer);
-
         using Framework::Math::Vector3;
         using Framework::Math::Matrix4x4;
         mMVP.world = Matrix4x4::transposition(Matrix4x4::createRotationZ(mRotate) * Matrix4x4::createRotationY(mRotate * 2));
@@ -144,18 +150,19 @@ protected:
         Framework::Graphics::DX12Manager::getInstance().drawBegin();
         ID3D12GraphicsCommandList* mCommandList = Framework::Graphics::DX12Manager::getInstance().getCommandList();
 
+        mMVPConstantBuffer->addToCommandList(mCommandList, 0);
+        mColorConstantBuffer->addToCommandList(mCommandList, 2);
         if (mMode) {
             ID3D12DescriptorHeap* heaps[] = { mTexture->getDescriptorHeap() };
             mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
-            mTexture->addToCommandList(mCommandList, 0);
+            mTexture->addToCommandList(mCommandList, 1);
         }
         else {
             ID3D12DescriptorHeap* heaps[] = { mTexture2->getDescriptorHeap() };
             mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
-            mTexture2->addToCommandList(mCommandList, 0);
+            mTexture2->addToCommandList(mCommandList, 1);
         }
-        mColorConstantBuffer->addToCommandList(mCommandList, 1);
-        mMVPConstantBuffer->addToCommandList(mCommandList, 2);
+
         mVertexBuffer->addToCommandList(mCommandList);
         mIndexBuffer->addToCommandList(mCommandList);
         mIndexBuffer->drawCall(mCommandList);

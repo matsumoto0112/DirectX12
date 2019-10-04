@@ -35,6 +35,7 @@ private:
     ComPtr<ID3D12DescriptorHeap> mSRVHeap; //!< テクスチャSRV用
     ComPtr<ID3D12Resource> mTexture; //!< テクスチャ
     ComPtr<ID3D12DescriptorHeap> mTextureDH; //!< テクスチャのディスクリプタヒープ
+
 };
 
 } //Graphics 
