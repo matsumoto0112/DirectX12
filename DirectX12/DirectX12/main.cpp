@@ -34,6 +34,7 @@ namespace {
 using namespace Framework::Graphics;
 struct Vertex {
     Framework::Math::Vector4 pos;
+    Framework::Graphics::Color4 color;
 };
 
 struct ColorBuffer {
@@ -69,7 +70,7 @@ public:
         window->addProcedureEvent(new DestroyProc());
         window->addProcedureEvent(new CloseProc());
 
-        mColorBuffer.color = Framework::Graphics::Color4(1.0f, 0.0f, 0.0f, 1.0f);
+        mColorBuffer.color = Framework::Graphics::Color4(1.0f, 1.0f, 1.0f, 1.0f);
 
         UINT width = Framework::Define::Config::getInstance().screenWidth;
         UINT height = Framework::Define::Config::getInstance().screenHeight;
@@ -80,14 +81,14 @@ public:
 
         std::vector<Vertex> vertices
         {
-            {{-0.5f,   0.5f,  -0.5f,  1.0f} },
-            {{0.5f,    0.5f,  -0.5f,  1.0f} },
-            {{0.5f,    -0.5f,  -0.5f,  1.0f} },
-            {{-0.5f,   -0.5f,  -0.5f,  1.0f} },
-            {{-0.5f,    0.5f,   0.5f,  1.0f} },
-            {{0.5f,     0.5f,   0.5f,  1.0f} },
-            {{0.5f,    -0.5f,   0.5f,  1.0f} },
-            {{-0.5f,   -0.5f,   0.5f,  1.0f} },
+            {{-0.5f,   0.5f,  -0.5f,  1.0f} ,Framework::Graphics::Color4(1.0f,0.0f,0.0f,1.0f)},
+            {{0.5f,    0.5f,  -0.5f,  1.0f} ,Framework::Graphics::Color4(0.0f,1.0f,0.0f,1.0f)},
+            {{0.5f,    -0.5f,  -0.5f,  1.0f},Framework::Graphics::Color4(0.0f,0.0f,1.0f,1.0f) },
+            {{-0.5f,   -0.5f,  -0.5f,  1.0f} ,Framework::Graphics::Color4(0.0f,1.0f,1.0f,1.0f)},
+            {{-0.5f,    0.5f,   0.5f,  1.0f} ,Framework::Graphics::Color4(1.0f,1.0f,0.0f,1.0f)},
+            {{0.5f,     0.5f,   0.5f,  1.0f} ,Framework::Graphics::Color4(1.0f,0.0f,1.0f,1.0f)},
+            {{0.5f,    -0.5f,   0.5f,  1.0f},Framework::Graphics::Color4(1.0f,1.0f,1.0f,1.0f) },
+            {{-0.5f,   -0.5f,   0.5f,  1.0f},Framework::Graphics::Color4(0.0f,0.0f,0.0f,1.0f) },
         };
         std::vector<UINT> indices
         {
@@ -124,16 +125,16 @@ protected:
         mColorBuffer.color.g += 0.005f;
         if (mColorBuffer.color.g >= 1.0f) mColorBuffer.color.g -= 1.0f;
 
-        mColorConstantBuffer->updateBuffer(mColorBuffer);
+        //mColorConstantBuffer->updateBuffer(mColorBuffer);
 
         using Framework::Math::Vector3;
         using Framework::Math::Matrix4x4;
-        mMVP.world = Matrix4x4::transposition(Matrix4x4::createScale(Vector3(mScale, mScale, mScale)));
+        mMVP.world = Matrix4x4::transposition(Matrix4x4::createRotationZ(mRotate) * Matrix4x4::createRotationY(mRotate * 2));
         mMVP.view = Matrix4x4::transposition(Matrix4x4::createView({ Vector3(0,0,-10),Vector3(0,0,0),Vector3(0,1,0) }));
         float ratio = static_cast<float>(Framework::Define::Config::getInstance().screenWidth) / static_cast<float>(Framework::Define::Config::getInstance().screenHeight);
         mMVP.proj = Matrix4x4::transposition(Matrix4x4::createProjection({ 45.0f,ratio,0.1f,1000.0f }));
         mMVPConstantBuffer->updateBuffer(mMVP);
-        mScale += 0.01f;
+        mRotate += 0.1f;
 
         if (Framework::Device::GameDevice::getInstance().getInputManager()->getKeyboard().getKeyDown(Framework::Input::KeyCode::A)) {
             mMode = !mMode;
@@ -183,7 +184,7 @@ private:
     std::unique_ptr<Framework::Graphics::ConstantBuffer> mMVPConstantBuffer; //!< コンスタントバッファ
     ColorBuffer mColorBuffer;
     MVP mMVP;
-    float mScale;
+    float mRotate;
     bool mMode;
     UINT mNumIndices;
 };

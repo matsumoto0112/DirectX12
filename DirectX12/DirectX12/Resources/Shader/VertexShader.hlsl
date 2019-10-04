@@ -3,11 +3,13 @@
 struct VSInput
 {
     float4 pos : POSITION;
+    float4 color : COLOR0;
 };
 
 struct VSOutput
 {
     float4 pos : SV_POSITION;
+    float4 color : COLOR;
 };
 
 VSOutput main(const VSInput input)
@@ -17,5 +19,6 @@ VSOutput main(const VSInput input)
     m = mul(m, proj);
 
     o.pos = mul(input.pos, m);
+    o.color = input.color;
     return o;
 }
