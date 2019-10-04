@@ -235,7 +235,7 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
     //    sigunature->GetBufferSize(),
     //    IID_PPV_ARGS(&mRootSignature)));
 
-    mRootSignature = std::make_unique<RootSignature>();
+    mRootSignature = std::make_shared<RootSignature>();
     mRootSignature->addConstantBufferParameter(Visibility::All, 0);
     mRootSignature->addTextureParameter(Visibility::All, 0);
     mRootSignature->addConstantBufferParameter(Visibility::All, 1);
@@ -276,35 +276,26 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
             return blendDesc;
         };
 
-        {
-            //パイプライン生成
-            D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
-            psoDesc.pRootSignature = mRootSignature->getRootSignature();
-            //psoDesc.pRootSignature = mRootSignature.Get();
-            Framework::Utility::ShaderReader vsreader((std::string)Framework::Define::Path::getInstance().shader + "VertexShader.cso");
-            std::vector<BYTE> vs = vsreader.get();
-            std::vector<D3D12_INPUT_ELEMENT_DESC> elemDescs = vsreader.getShaderReflection();
-            psoDesc.InputLayout = { elemDescs.data(),(UINT)elemDescs.size() };
-            psoDesc.VS.pShaderBytecode = vs.data();
-            psoDesc.VS.BytecodeLength = vs.size();
-            Framework::Utility::ShaderReader psreader((std::string)Framework::Define::Path::getInstance().shader + "PixelShader.cso");
-            std::vector<BYTE> ps = psreader.get();
-            psoDesc.PS.pShaderBytecode = ps.data();
-            psoDesc.PS.BytecodeLength = ps.size();
+        Framework::Utility::ShaderReader vsreader((std::string)Framework::Define::Path::getInstance().shader + "VertexShader.cso");
+        std::vector<BYTE> vs = vsreader.get();
+        std::vector<D3D12_INPUT_ELEMENT_DESC> elemDescs = vsreader.getShaderReflection();
+        Framework::Utility::ShaderReader psreader((std::string)Framework::Define::Path::getInstance().shader + "PixelShader.cso");
+        std::vector<BYTE> ps = psreader.get();
 
-            psoDesc.RasterizerState = createRasterizerState();
-            psoDesc.BlendState = createBlendState();
-            psoDesc.DepthStencilState.DepthEnable = FALSE;
-            psoDesc.DepthStencilState.StencilEnable = FALSE;
-            psoDesc.SampleMask = UINT_MAX;
-            psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE::D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-            psoDesc.NumRenderTargets = 1;
-            psoDesc.RTVFormats[0] = DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM;
-            psoDesc.SampleDesc.Count = 1;
-            throwIfFailed(mDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPipelineState)));
-        }
-        //コマンドリスト作成
-        throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator.Get(), mPipelineState.Get(), IID_PPV_ARGS(&mCommandList)));
+        mPipeline = std::make_unique<Pipeline>(mRootSignature);
+        mPipeline->setVertexShader({ vs.data(),vs.size() });
+        mPipeline->setPixelShader({ ps.data(),ps.size() });
+        mPipeline->setInputLayout({ elemDescs.data(),(UINT)elemDescs.size() });
+        mPipeline->setBlendState(createBlendState());
+        mPipeline->setRasterizerState(createRasterizerState());
+        mPipeline->setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE::D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+        mPipeline->setSampleDesc({ 1,0 });
+        mPipeline->setSampleMask(UINT_MAX);
+        mPipeline->setRenderTarget({ DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM });
+        mPipeline->createPipelineState();
+
+
+        throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator.Get(), mPipeline->getPipelineState(), IID_PPV_ARGS(&mCommandList)));
 
         mViewport.TopLeftX = 0;
         mViewport.TopLeftY = 0;
@@ -334,15 +325,13 @@ void DX12Manager::finalize() {
 
 void DX12Manager::drawBegin() {
     throwIfFailed(mCommandAllocator->Reset());
-    throwIfFailed(mCommandList->Reset(mCommandAllocator.Get(), mPipelineState.Get()));
+    throwIfFailed(mCommandList->Reset(mCommandAllocator.Get(), mPipeline->getPipelineState()));
 
-    //mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
     mRootSignature->addToCommandList(mCommandList.Get());
-    mCommandList->SetPipelineState(mPipelineState.Get());
+    mPipeline->addToCommandList(mCommandList.Get());
 
     mCommandList->RSSetViewports(1, &mViewport);
     mCommandList->RSSetScissorRects(1, &mScissorRect);
-
 
     mCommandList->ResourceBarrier(1, &createResourceBarrier(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET));
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle{};

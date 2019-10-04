@@ -5,6 +5,7 @@
 #include "Framework/Utility/Singleton.h"
 #include "Framework/Utility/Typedef.h"
 #include "Framework/Graphics/DX12/Render/RootSignature.h"
+#include "Framework/Graphics/DX12/Render/Pipeline.h"
 
 namespace Framework {
 namespace Graphics {
@@ -55,9 +56,9 @@ public:
     */
     void executeCommand();
     //private:
-        /**
-        * @brief フレーム経過まで待機する
-        */
+    /**
+    * @brief フレーム経過まで待機する
+    */
     void waitForPreviousFrame();
 private:
     static constexpr UINT FRAME_COUNT = 2;
@@ -76,8 +77,9 @@ private:
     D3D12_VIEWPORT mViewport;
     D3D12_RECT mScissorRect;
     //ComPtr<ID3D12RootSignature> mRootSignature; //!< ルートシグネチャ
-    ComPtr<ID3D12PipelineState> mPipelineState; //!< パイプラインステート
-    std::unique_ptr<RootSignature> mRootSignature;
+    std::unique_ptr<Pipeline> mPipeline;
+    //ComPtr<ID3D12PipelineState> mPipelineState; //!< パイプラインステート
+    std::shared_ptr<RootSignature> mRootSignature;
 };
 
 } //Graphics 

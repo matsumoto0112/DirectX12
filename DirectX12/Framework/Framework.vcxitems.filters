@@ -36,6 +36,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\ShaderReader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Render\RootSignature.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Render\Pipeline.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Math\IntVector2.h" />
@@ -92,5 +93,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Render\RootSignature.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\ShaderReader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\RegisterNumCounter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Render\Pipeline.h" />
   </ItemGroup>
 </Project>
