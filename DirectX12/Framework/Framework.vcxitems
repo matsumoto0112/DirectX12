@@ -19,6 +19,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Device\GameDevice.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Game.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\Color4.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\IndexBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\Texture.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\VertexBuffer.cpp" />
@@ -53,6 +54,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Device\GameDevice.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Game.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Color4.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBuffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\IndexBuffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\Texture.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\VertexBuffer.h" />

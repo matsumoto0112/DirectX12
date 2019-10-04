@@ -34,10 +34,6 @@ public:
     */
     void finalize();
     /**
-    * @brief フェンス作成
-    */
-    void createFence();
-    /**
     * @brief デバイスを取得する
     */
     ID3D12Device* getDevice() const { return mDevice.Get(); }
@@ -57,7 +53,7 @@ public:
     * @brief コマンドリストを実行する
     */
     void executeCommand();
-private:
+//private:
     /**
     * @brief フレーム経過まで待機する
     */

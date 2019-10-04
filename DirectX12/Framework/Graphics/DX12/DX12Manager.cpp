@@ -277,7 +277,6 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
 
             D3D12_INPUT_ELEMENT_DESC elementDescs[] = {
                 { "POSITION",   0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32A32_FLOAT,  0,  D3D12_APPEND_ALIGNED_ELEMENT,   D3D12_INPUT_CLASSIFICATION::D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-                { "TEXCOORD",  0,DXGI_FORMAT::DXGI_FORMAT_R32G32_FLOAT,        0,  D3D12_APPEND_ALIGNED_ELEMENT,   D3D12_INPUT_CLASSIFICATION::D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
             };
 
             //パイプライン生成
@@ -315,26 +314,17 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
         mScissorRect.bottom = static_cast<LONG>(height);
     }
 
-    //executeCommand();
+    throwIfFailed(mDevice->CreateFence(0, D3D12_FENCE_FLAGS::D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
+    mFenceValue = 1;
+    mFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    if (!mFenceEvent) {
+        throwIfFailed(HRESULT_FROM_WIN32(GetLastError()));
+    }
 }
 
 void DX12Manager::finalize() {
     waitForPreviousFrame();
     CloseHandle(mFenceEvent);
-}
-
-void DX12Manager::createFence() {
-    //フェンス作成
-    {
-        throwIfFailed(mDevice->CreateFence(0, D3D12_FENCE_FLAGS::D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
-        mFenceValue = 1;
-        mFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        if (!mFenceEvent) {
-            throwIfFailed(HRESULT_FROM_WIN32(GetLastError()));
-        }
-
-        waitForPreviousFrame();
-    }
 }
 
 void DX12Manager::drawBegin() {
@@ -355,7 +345,6 @@ void DX12Manager::drawBegin() {
 
     const float clear[] = { 0.65f,0.2f,0.48f,0.0f };
     mCommandList->ClearRenderTargetView(rtvHandle, clear, 0, nullptr);
-
 }
 
 void DX12Manager::drawEnd() {

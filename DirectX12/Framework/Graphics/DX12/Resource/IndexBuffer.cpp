@@ -1,12 +1,29 @@
 #include "IndexBuffer.h"
 #include "Framework/Graphics/DX12/Helper.h"
 #include "Framework/Graphics/DX12/DXInterfaceAccessor.h"
+#include "Framework/Utility/Debug.h"
+
+namespace {
+D3D_PRIMITIVE_TOPOLOGY convertToD3D_PRIMITIVE_TOPOLOGY(Framework::Graphics::PrimitiveTolopolyType topologyType) {
+    switch (topologyType) {
+        case Framework::Graphics::PrimitiveTolopolyType::TriangleList:
+            return D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+        case Framework::Graphics::PrimitiveTolopolyType::TriangleStrip:
+            return D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+        case Framework::Graphics::PrimitiveTolopolyType::PointList:
+            return D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
+        default:
+            MY_ASSERTION(false, "PrimitiveTolopolyTypeがD3D_PRIMITIVE_TOPOLOGYに変換できません");
+            return D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED;
+    }
+}
+}
 
 namespace Framework {
 namespace Graphics {
 
-IndexBuffer::IndexBuffer(const std::vector<UINT>& indices)
-    :mIndexNum(indices.size()) {
+IndexBuffer::IndexBuffer(const std::vector<UINT>& indices, PrimitiveTolopolyType topologyType)
+    :mIndexNum(indices.size()), mTopologyType(convertToD3D_PRIMITIVE_TOPOLOGY(topologyType)) {
     const UINT indexBufferSize = sizeof(UINT) * mIndexNum; //インデックスのメモリサイズ
     throwIfFailed(DXInterfaceAccessor::getDevice()->CreateCommittedResource(
         &createProperty(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD),
@@ -34,6 +51,7 @@ void IndexBuffer::addToCommandList(ID3D12GraphicsCommandList* commandList) const
 }
 
 void IndexBuffer::drawCall(ID3D12GraphicsCommandList* commandList) {
+    commandList->IASetPrimitiveTopology(mTopologyType);
     commandList->DrawIndexedInstanced(mIndexNum, 1, 0, 0, 0);
 }
 
