@@ -17,10 +17,7 @@ struct VSOutput
 VSOutput main(const VSInput input)
 {
     VSOutput o = (VSOutput) 0;
-    matrix m = mul(world, view);
-    m = mul(m, proj);
-
-    o.pos = mul(input.pos, m);
+    o.pos = mul(input.pos, MVPMatrix());
     o.uv = input.uv;
     o.color = input.color;
     return o;

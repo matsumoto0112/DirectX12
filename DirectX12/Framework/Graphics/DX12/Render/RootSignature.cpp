@@ -5,21 +5,6 @@
 #include "Framework/Utility/Debug.h"
 
 namespace {
-D3D12_SHADER_VISIBILITY convertToD3D12_SHADER_VISIBILITY(Framework::Graphics::Visibility visibility) {
-    switch (visibility) {
-        case Framework::Graphics::Visibility::All:
-            return D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_ALL;
-        case Framework::Graphics::Visibility::Vertex:
-            return D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_VERTEX;
-        case Framework::Graphics::Visibility::Pixel:
-            return D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
-        case Framework::Graphics::Visibility::Geometory:
-            return D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_GEOMETRY;
-        default:
-            MY_ASSERTION(false, "Visibility‚ªD3D12_SHADER_VISIBILITY‚É•ÏŠ·‚Å‚«‚Ü‚¹‚ñ");
-            return D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_ALL;
-    }
-}
 
 D3D12_DESCRIPTOR_RANGE1 createRange(D3D12_DESCRIPTOR_RANGE_TYPE type, UINT num, UINT baseRegisterNumber, UINT registerSpace, D3D12_DESCRIPTOR_RANGE_FLAGS flag, UINT offset = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND) {
     D3D12_DESCRIPTOR_RANGE1 range{};
@@ -116,19 +101,19 @@ void RootSignature::addToCommandList(ID3D12GraphicsCommandList* commandList) {
     commandList->SetGraphicsRootSignature(getRootSignature());
 }
 
-void RootSignature::addConstantBufferParameter(Visibility visibility, UINT registerNum) {
+void RootSignature::addConstantBufferParameter(VisibilityType visibility, UINT registerNum) {
     D3D12_ROOT_PARAMETER1 param = createCBVParameter(registerNum, convertToD3D12_SHADER_VISIBILITY(visibility));
     mRootParameters.emplace_back(param);
 }
 
-void RootSignature::addTextureParameter(Visibility visibility, UINT registerNum) {
+void RootSignature::addTextureParameter(VisibilityType visibility, UINT registerNum) {
     D3D12_ROOT_PARAMETER1 param = createDescriptorTableParameter(0, nullptr, convertToD3D12_SHADER_VISIBILITY(visibility));
     mRootParameters.emplace_back(param);
 
     mTextureParameterInfos.emplace_back(TextureParameterInfo{ (UINT)(mRootParameters.size() - 1),registerNum });
 }
 
-void RootSignature::addSamplerParameter(Visibility visibility, UINT registerNum) { }
+void RootSignature::addSamplerParameter(VisibilityType visibility, UINT registerNum) { }
 
 void RootSignature::addStaticSamplerParameter(const D3D12_STATIC_SAMPLER_DESC& sampler) {
     mSamplers.emplace_back(sampler);

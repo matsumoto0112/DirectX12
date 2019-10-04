@@ -29,6 +29,8 @@
     <FxCompile Include="Resources\Shader\PixelShader.hlsl" />
     <FxCompile Include="Resources\Shader\VertexShader.hlsl" />
     <FxCompile Include="Resources\Shader\PixelShader2.hlsl" />
+    <FxCompile Include="Resources\Shader\2D\Texture2D_VS.hlsl" />
+    <FxCompile Include="Resources\Shader\2D\Texture2D_PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shader\Utility\ShaderDefine.hlsli" />

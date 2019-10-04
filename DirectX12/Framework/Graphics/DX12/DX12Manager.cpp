@@ -3,6 +3,7 @@
 #include "Framework/Graphics/DX12/Helper.h"
 #include "Framework/Define/Path.h"
 #include "Framework/Utility/IO/ShaderReader.h"
+#include "Framework/Graphics/DX12/Desc/Sampler.h"
 
 namespace {
 /**
@@ -134,111 +135,12 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
         D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT,
         IID_PPV_ARGS(&mCommandAllocator)));
 
-    //D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData{};
-    ////使用可能なバージョンの中で上位のものを使用する
-    //featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION::D3D_ROOT_SIGNATURE_VERSION_1_1;
-    //if (FAILED(mDevice->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData)))) {
-    //    featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION::D3D_ROOT_SIGNATURE_VERSION_1_0;
-    //}
-
-    //auto initRange = [](D3D12_DESCRIPTOR_RANGE_TYPE type, UINT num, UINT baseRegisterNumber, UINT registerSpace, D3D12_DESCRIPTOR_RANGE_FLAGS flag, UINT offset = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND) {
-    //    D3D12_DESCRIPTOR_RANGE1 range{};
-    //    range.RangeType = type;
-    //    range.NumDescriptors = num;
-    //    range.BaseShaderRegister = baseRegisterNumber;
-    //    range.RegisterSpace = registerSpace;
-    //    range.Flags = flag;
-    //    range.OffsetInDescriptorsFromTableStart = offset;
-    //    return range;
-    //};
-
-    //auto initParam = [](UINT num, const D3D12_DESCRIPTOR_RANGE1* ranges, D3D12_SHADER_VISIBILITY visibility) {
-    //    D3D12_ROOT_PARAMETER1 rootParam{};
-    //    rootParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    //    rootParam.ShaderVisibility = visibility;
-    //    rootParam.DescriptorTable.NumDescriptorRanges = num;
-    //    rootParam.DescriptorTable.pDescriptorRanges = ranges;
-    //    return rootParam;
-    //};
-
-    //auto initRoot = [](UINT num,
-    //    const D3D12_ROOT_PARAMETER1* param,
-    //    UINT numStaticSampler,
-    //    const D3D12_STATIC_SAMPLER_DESC* sampler,
-    //    D3D12_ROOT_SIGNATURE_FLAGS flag) {
-    //        D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc{};
-    //        rootSignatureDesc.Version = D3D_ROOT_SIGNATURE_VERSION::D3D_ROOT_SIGNATURE_VERSION_1;
-    //        rootSignatureDesc.Desc_1_1.NumParameters = num;
-    //        rootSignatureDesc.Desc_1_1.pParameters = param;
-    //        rootSignatureDesc.Desc_1_1.NumStaticSamplers = numStaticSampler;
-    //        rootSignatureDesc.Desc_1_1.pStaticSamplers = sampler;
-    //        rootSignatureDesc.Desc_1_1.Flags = flag;
-    //        return rootSignatureDesc;
-    //};
-
-    //auto serializeVersionedRootSignature = [](
-    //    const D3D12_VERSIONED_ROOT_SIGNATURE_DESC* rootSignatureDesc,
-    //    D3D_ROOT_SIGNATURE_VERSION version,
-    //    ID3DBlob** ppBlob,
-    //    ID3DBlob** ppError) {
-    //        return D3D12SerializeVersionedRootSignature(rootSignatureDesc, ppBlob, ppError);
-    //};
-
-    //D3D12_DESCRIPTOR_RANGE1 range[1];
-    //range[0] = initRange(D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
-    //    1,
-    //    0,
-    //    0,
-    //    D3D12_DESCRIPTOR_RANGE_FLAGS::D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
-
-    //D3D12_ROOT_PARAMETER1 rootParameter[3];
-    //rootParameter[0] = initParam(1, &range[0], D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_ALL);
-    //rootParameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
-    //rootParameter[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_CBV;
-    //rootParameter[1].Descriptor.ShaderRegister = 1;
-    //rootParameter[1].Descriptor.RegisterSpace = 0;
-    //rootParameter[2].ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_VERTEX;
-    //rootParameter[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_CBV;
-    //rootParameter[2].Descriptor.ShaderRegister = 0;
-    //rootParameter[2].Descriptor.RegisterSpace = 0;
-
-
-    //D3D12_ROOT_SIGNATURE_FLAGS  rootSignatureFlags =
-    //    D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-
-    D3D12_STATIC_SAMPLER_DESC sampler{};
-    sampler.Filter = D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_POINT;
-    sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    sampler.MipLODBias = 0;
-    sampler.MaxAnisotropy = 0;
-    sampler.MinLOD = 0.0f;
-    sampler.MaxLOD = D3D12_FLOAT32_MAX;
-    sampler.ShaderRegister = 0;
-    sampler.RegisterSpace = 0;
-    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_PIXEL;
-
-    //D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc = initRoot(
-    //    _countof(rootParameter),
-    //    rootParameter,
-    //    1,
-    //    &sampler,
-    //    rootSignatureFlags);
-
-    //ComPtr<ID3DBlob> sigunature, error;
-    //featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION::D3D_ROOT_SIGNATURE_VERSION_1;
-    //throwIfFailed(serializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &sigunature, &error));
-
-    //HRESULT hr = (mDevice->CreateRootSignature(0,
-    //    sigunature->GetBufferPointer(),
-    //    sigunature->GetBufferSize(),
-    //    IID_PPV_ARGS(&mRootSignature)));
+    D3D12_STATIC_SAMPLER_DESC sampler = Sampler::createStaticSampler(FilterMode::Linear, AddressMode::Wrap, VisibilityType::Pixel, 0);
 
     mRootSignature = std::make_shared<RootSignature>();
-    mRootSignature->addConstantBufferParameter(Visibility::All, 0);
-    mRootSignature->addTextureParameter(Visibility::All, 0);
-    mRootSignature->addConstantBufferParameter(Visibility::All, 1);
+    mRootSignature->addConstantBufferParameter(VisibilityType::All, 0);
+    mRootSignature->addTextureParameter(VisibilityType::All, 0);
+    mRootSignature->addConstantBufferParameter(VisibilityType::All, 1);
     mRootSignature->addStaticSamplerParameter(sampler);
     mRootSignature->createDX12RootSignature();
 
@@ -282,20 +184,20 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
         Framework::Utility::ShaderReader psreader((std::string)Framework::Define::Path::getInstance().shader + "PixelShader.cso");
         std::vector<BYTE> ps = psreader.get();
 
-        mPipeline = std::make_unique<Pipeline>(mRootSignature);
-        mPipeline->setVertexShader({ vs.data(),vs.size() });
-        mPipeline->setPixelShader({ ps.data(),ps.size() });
-        mPipeline->setInputLayout({ elemDescs.data(),(UINT)elemDescs.size() });
-        mPipeline->setBlendState(createBlendState());
-        mPipeline->setRasterizerState(createRasterizerState());
-        mPipeline->setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE::D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-        mPipeline->setSampleDesc({ 1,0 });
-        mPipeline->setSampleMask(UINT_MAX);
-        mPipeline->setRenderTarget({ DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM });
-        mPipeline->createPipelineState();
+        mDefaultPipeline = std::make_unique<Pipeline>(mRootSignature);
+        mDefaultPipeline->setVertexShader({ vs.data(),vs.size() });
+        mDefaultPipeline->setPixelShader({ ps.data(),ps.size() });
+        mDefaultPipeline->setInputLayout({ elemDescs.data(),(UINT)elemDescs.size() });
+        mDefaultPipeline->setBlendState(createBlendState());
+        mDefaultPipeline->setRasterizerState(createRasterizerState());
+        mDefaultPipeline->setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE::D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+        mDefaultPipeline->setSampleDesc({ 1,0 });
+        mDefaultPipeline->setSampleMask(UINT_MAX);
+        mDefaultPipeline->setRenderTarget({ DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM });
+        mDefaultPipeline->createPipelineState();
 
 
-        throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator.Get(), mPipeline->getPipelineState(), IID_PPV_ARGS(&mCommandList)));
+        throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator.Get(), mDefaultPipeline->getPipelineState(), IID_PPV_ARGS(&mCommandList)));
 
         mViewport.TopLeftX = 0;
         mViewport.TopLeftY = 0;
@@ -325,10 +227,10 @@ void DX12Manager::finalize() {
 
 void DX12Manager::drawBegin() {
     throwIfFailed(mCommandAllocator->Reset());
-    throwIfFailed(mCommandList->Reset(mCommandAllocator.Get(), mPipeline->getPipelineState()));
+    throwIfFailed(mCommandList->Reset(mCommandAllocator.Get(), mDefaultPipeline->getPipelineState()));
 
     mRootSignature->addToCommandList(mCommandList.Get());
-    mPipeline->addToCommandList(mCommandList.Get());
+    mDefaultPipeline->addToCommandList(mCommandList.Get());
 
     mCommandList->RSSetViewports(1, &mViewport);
     mCommandList->RSSetScissorRects(1, &mScissorRect);

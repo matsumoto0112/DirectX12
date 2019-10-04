@@ -29,6 +29,8 @@
 #include "Framework/Graphics/DX12/Resource/ConstantBuffer.h"
 #include "Framework/Graphics/DX12/Resource/Texture.h"
 #include "Framework/Graphics/DX12/Helper.h"
+#include "Framework/Graphics/DX12/Render/Pipeline.h"
+#include "Framework/Graphics/DX12/Render/RootSignature.h"
 
 namespace {
 using namespace Framework::Graphics;
@@ -123,6 +125,13 @@ public:
         mColorConstantBuffer = std::make_unique<Framework::Graphics::ConstantBuffer>(mColorBuffer);
         mMVPConstantBuffer = std::make_unique<Framework::Graphics::ConstantBuffer>(mMVP);
 
+        mRootSignature = std::make_unique<Framework::Graphics::RootSignature>();
+        mRootSignature->addConstantBufferParameter(Framework::Graphics::VisibilityType::All, 0);
+        mRootSignature->addConstantBufferParameter(Framework::Graphics::VisibilityType::All, 1);
+        mRootSignature->addConstantBufferParameter(Framework::Graphics::VisibilityType::All, 2);
+        mRootSignature->addTextureParameter(Framework::Graphics::VisibilityType::All, 0);
+        //mRootSignature->addStaticSamplerParameter();
+
         return true;
     }
 protected:
@@ -183,7 +192,9 @@ private:
     };
     std::unique_ptr<Framework::Graphics::Texture> mTexture; //!< テクスチャ
     std::unique_ptr<Framework::Graphics::Texture> mTexture2; //!< テクスチャ
-    ComPtr<ID3D12PipelineState> mPipelineState2; //!< パイプラインステート
+
+    std::unique_ptr<Framework::Graphics::Pipeline> mPipeline;
+    std::unique_ptr<Framework::Graphics::RootSignature> mRootSignature;
 
     std::unique_ptr<Framework::Graphics::VertexBuffer> mVertexBuffer; //!< 頂点バッファ
     std::unique_ptr<Framework::Graphics::IndexBuffer> mIndexBuffer; //!< インデックスバッファ

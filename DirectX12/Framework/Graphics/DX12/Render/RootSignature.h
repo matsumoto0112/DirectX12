@@ -5,6 +5,7 @@
 #include "Framework/Graphics/DX12/RegisterNumCounter.h"
 #include "Framework/Graphics/DX12/Resource/ConstantBuffer.h"
 #include "Framework/Graphics/DX12/Resource/Texture.h"
+#include "Framework/Graphics/DX12/VisibilityType.h"
 
 namespace Framework {
 namespace Graphics {
@@ -17,17 +18,6 @@ enum class ResourceType {
     ConstantBuffer,
     Texture,
     Sampler,
-};
-
-/**
-* @enum Visibility
-* @brief どのシェーダーなら見えるか
-*/
-enum class Visibility {
-    All,
-    Vertex,
-    Pixel,
-    Geometory,
 };
 
 /**
@@ -68,15 +58,15 @@ public:
     /**
     * @brief コンスタントパラメータを追加する
     */
-    void addConstantBufferParameter(Visibility visibility, UINT shaderRegisterNum);
+    void addConstantBufferParameter(VisibilityType visibility, UINT shaderRegisterNum);
     /**
     * @brief テクスチャパラメータを追加する
     */
-    void addTextureParameter(Visibility visibility, UINT shaderRegisterNum);
+    void addTextureParameter(VisibilityType visibility, UINT shaderRegisterNum);
     /**
     * @brief サンプラーパラメータを追加する
     */
-    void addSamplerParameter(Visibility visibility, UINT shaderRegisterNum);
+    void addSamplerParameter(VisibilityType visibility, UINT shaderRegisterNum);
     /**
     * @brief スタティックサンプラーを追加する
     */

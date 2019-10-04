@@ -94,5 +94,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\ShaderReader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\RegisterNumCounter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Render\Pipeline.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Desc\Sampler.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\VisibilityType.h" />
   </ItemGroup>
 </Project>
