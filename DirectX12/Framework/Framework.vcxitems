@@ -41,6 +41,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\Debug.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\FPS.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\ByteReader.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\ShaderReader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\TextureLoader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\Time.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Window\Procedure\CloseProc.cpp" />
@@ -89,6 +90,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\FPS.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\ByteReader.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\ShaderReader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\TextureLoader.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Property.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Resource\ResourceManager.h" />

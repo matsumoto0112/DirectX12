@@ -2,6 +2,7 @@
 #include "Framework/Utility/IO/ByteReader.h"
 #include "Framework/Graphics/DX12/Helper.h"
 #include "Framework/Define/Path.h"
+#include "Framework/Utility/IO/ShaderReader.h"
 
 namespace {
 /**
@@ -269,25 +270,20 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
         };
 
         {
-            //シェーダーの読み込み
-            Framework::Utility::ByteReader reader((std::string)Framework::Define::Path::getInstance().shader + "VertexShader.cso");
-            std::vector<BYTE> vs = reader.get();
-            reader = Framework::Utility::ByteReader((std::string)Framework::Define::Path::getInstance().shader + "PixelShader.cso");
-            std::vector<BYTE> ps = reader.get();
-
-            D3D12_INPUT_ELEMENT_DESC elementDescs[] = {
-                { "POSITION",   0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32A32_FLOAT,  0,  D3D12_APPEND_ALIGNED_ELEMENT,   D3D12_INPUT_CLASSIFICATION::D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-                { "COLOR",   0,DXGI_FORMAT::DXGI_FORMAT_R32G32B32A32_FLOAT,  0,  D3D12_APPEND_ALIGNED_ELEMENT,   D3D12_INPUT_CLASSIFICATION::D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-            };
-
             //パイプライン生成
             D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
-            psoDesc.InputLayout = { elementDescs,_countof(elementDescs) };
             psoDesc.pRootSignature = mRootSignature.Get();
+            Framework::Utility::ShaderReader vsreader((std::string)Framework::Define::Path::getInstance().shader + "VertexShader.cso");
+            std::vector<BYTE> vs = vsreader.get();
+            std::vector<D3D12_INPUT_ELEMENT_DESC> elemDescs = vsreader.getShaderReflection();       
+            psoDesc.InputLayout = { elemDescs.data(),(UINT)elemDescs.size() };
             psoDesc.VS.pShaderBytecode = vs.data();
             psoDesc.VS.BytecodeLength = vs.size();
+            Framework::Utility::ShaderReader psreader((std::string)Framework::Define::Path::getInstance().shader + "PixelShader.cso");
+            std::vector<BYTE> ps = psreader.get();
             psoDesc.PS.pShaderBytecode = ps.data();
             psoDesc.PS.BytecodeLength = ps.size();
+
             psoDesc.RasterizerState = createRasterizerState();
             psoDesc.BlendState = createBlendState();
             psoDesc.DepthStencilState.DepthEnable = FALSE;

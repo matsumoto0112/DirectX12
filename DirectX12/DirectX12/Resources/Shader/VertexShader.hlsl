@@ -2,7 +2,7 @@
 
 struct VSInput
 {
-    float4 pos : POSITION;
+    float4 pos : POSITION0;
     float4 color : COLOR0;
 };
 

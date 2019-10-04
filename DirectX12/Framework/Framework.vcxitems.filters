@@ -34,6 +34,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\VertexBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\Texture.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBuffer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\ShaderReader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Math\IntVector2.h" />
@@ -88,5 +89,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\Texture.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBuffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Render\RootSignature.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\ShaderReader.h" />
   </ItemGroup>
 </Project>
