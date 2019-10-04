@@ -68,6 +68,9 @@ inline D3D12_RESOURCE_DESC createResource(UINT size) {
     return res;
 }
 
+/**
+* @brief リソースバリアを作成する
+*/
 inline D3D12_RESOURCE_BARRIER createResourceBarrier(ID3D12Resource* resource,
     D3D12_RESOURCE_STATES before,
     D3D12_RESOURCE_STATES after,

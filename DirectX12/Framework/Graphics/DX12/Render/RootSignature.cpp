@@ -102,12 +102,12 @@ void RootSignature::addToCommandList(ID3D12GraphicsCommandList* commandList) {
 }
 
 void RootSignature::addConstantBufferParameter(VisibilityType visibility, UINT registerNum) {
-    D3D12_ROOT_PARAMETER1 param = createCBVParameter(registerNum, convertToD3D12_SHADER_VISIBILITY(visibility));
+    D3D12_ROOT_PARAMETER1 param = createCBVParameter(registerNum, toD3D12_SHADER_VISIBILITY(visibility));
     mRootParameters.emplace_back(param);
 }
 
 void RootSignature::addTextureParameter(VisibilityType visibility, UINT registerNum) {
-    D3D12_ROOT_PARAMETER1 param = createDescriptorTableParameter(0, nullptr, convertToD3D12_SHADER_VISIBILITY(visibility));
+    D3D12_ROOT_PARAMETER1 param = createDescriptorTableParameter(0, nullptr, toD3D12_SHADER_VISIBILITY(visibility));
     mRootParameters.emplace_back(param);
 
     mTextureParameterInfos.emplace_back(TextureParameterInfo{ (UINT)(mRootParameters.size() - 1),registerNum });

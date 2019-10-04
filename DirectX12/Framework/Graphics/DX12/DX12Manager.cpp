@@ -234,7 +234,6 @@ void DX12Manager::drawBegin() {
 
     mCommandList->RSSetViewports(1, &mViewport);
     mCommandList->RSSetScissorRects(1, &mScissorRect);
-
     mCommandList->ResourceBarrier(1, &createResourceBarrier(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET));
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle{};
     rtvHandle.ptr = static_cast<SIZE_T>(mRTVHeap->GetCPUDescriptorHandleForHeapStart().ptr + INT64(mFrameIndex) * UINT64(mRTVDescriptorSize));

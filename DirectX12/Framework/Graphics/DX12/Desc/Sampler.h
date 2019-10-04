@@ -35,7 +35,7 @@ public:
     /**
     * @brief コンストラクタ
     */
-    static constexpr D3D12_STATIC_SAMPLER_DESC createStaticSampler(
+    static inline D3D12_STATIC_SAMPLER_DESC createStaticSampler(
         FilterMode filter,
         AddressMode address,
         VisibilityType visibility,
@@ -51,12 +51,12 @@ public:
         sampler.MaxLOD = D3D12_FLOAT32_MAX;
         sampler.ShaderRegister = registerNum;
         sampler.RegisterSpace = 0;
-        sampler.ShaderVisibility = convertToD3D12_SHADER_VISIBILITY(visibility);
+        sampler.ShaderVisibility = toD3D12_SHADER_VISIBILITY(visibility);
 
         return sampler;
     }
 private:
-    static constexpr D3D12_TEXTURE_ADDRESS_MODE toD3D12_TEXTURE_ADDRESS_MODE(AddressMode address) {
+    static inline D3D12_TEXTURE_ADDRESS_MODE toD3D12_TEXTURE_ADDRESS_MODE(AddressMode address) {
         switch (address) {
             case Framework::Graphics::AddressMode::Wrap:
                 return D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -70,7 +70,7 @@ private:
                 return D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE;
         }
     }
-    static constexpr D3D12_FILTER toD3D12_FILTER(FilterMode filter) {
+    static inline D3D12_FILTER toD3D12_FILTER(FilterMode filter) {
         switch (filter) {
             case Framework::Graphics::FilterMode::Linear:
                 return D3D12_FILTER::D3D12_FILTER_MIN_MAG_MIP_LINEAR;

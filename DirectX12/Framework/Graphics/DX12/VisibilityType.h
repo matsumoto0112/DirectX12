@@ -16,7 +16,7 @@ enum class VisibilityType {
     Geometory,
 };
 
-inline constexpr D3D12_SHADER_VISIBILITY convertToD3D12_SHADER_VISIBILITY(Framework::Graphics::VisibilityType visibility) {
+inline D3D12_SHADER_VISIBILITY toD3D12_SHADER_VISIBILITY(VisibilityType visibility) {
     switch (visibility) {
         case Framework::Graphics::VisibilityType::All:
             return D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_ALL;
