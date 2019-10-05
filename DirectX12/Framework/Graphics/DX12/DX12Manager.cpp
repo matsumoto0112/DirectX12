@@ -172,7 +172,7 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
     };
 
 
-    constexpr UINT CONSTANT_BUFFER_NUM = 4;
+    constexpr UINT CONSTANT_BUFFER_NUM = 16 * 10000;
     constexpr UINT TEXTURE_MAX_NUM = 1;
     D3D12_VERSIONED_ROOT_SIGNATURE_DESC vrsd;
     D3D12_DESCRIPTOR_RANGE1 CBRange[1];

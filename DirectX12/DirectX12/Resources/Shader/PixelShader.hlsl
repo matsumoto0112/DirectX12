@@ -13,7 +13,7 @@ struct PSInput
 float4 main(const PSInput input) : SV_Target
 {
     float4 o = tex.Sample(samplerState, input.uv);
-    //o = o * input.color;
-    //o = o * color;
+    o = o * input.color;
+    o = o * color;
     return o;
 }

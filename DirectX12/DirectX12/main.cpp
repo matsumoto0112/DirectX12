@@ -111,10 +111,10 @@ public:
         //    4,1,0,
         //};
         std::vector<Vertex> vertices{
-            {{-0.5f,0.5f,0.0f,1.0f},{0.0f,0.0f},Framework::Graphics::Color4(1.0f,0.0f,0.0f,1.0f) },
-            {{0.5f,0.5f,0.0f,1.0f},{1.0f,0.0f},Framework::Graphics::Color4(1.0f,0.0f,0.0f,1.0f) },
-            {{0.5f,-0.5f,0.0f,1.0f},{1.0f,1.0f},Framework::Graphics::Color4(1.0f,0.0f,0.0f,1.0f) },
-            {{-0.5f,-0.5f,0.0f,1.0f},{0.0f,1.0f},Framework::Graphics::Color4(1.0f,0.0f,0.0f,1.0f) },
+            {{-0.5f,0.5f,0.0f,1.0f},{0.0f,0.0f},Framework::Graphics::Color4::WHITE },
+            {{0.5f,0.5f,0.0f,1.0f},{1.0f,0.0f},Framework::Graphics::Color4::WHITE },
+            {{0.5f,-0.5f,0.0f,1.0f},{1.0f,1.0f},Framework::Graphics::Color4::WHITE },
+            {{-0.5f,-0.5f,0.0f,1.0f},{0.0f,1.0f},Framework::Graphics::Color4::WHITE },
         };
 
         std::vector<UINT> indices{ 0,1,2,0,2,3 };
@@ -145,7 +145,7 @@ public:
 
 
         //CBV
-        UINT MAX_CONSTANT_BUFFER_NUM = 4;
+        UINT MAX_CONSTANT_BUFFER_NUM = 16 * 10000;
         D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc{};
         cbvHeapDesc.NumDescriptors = MAX_CONSTANT_BUFFER_NUM;
         cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
@@ -191,14 +191,11 @@ protected:
         mColorBuffer.color.r = (Framework::Math::MathUtil::cos(mAlphaTheta) + 1.0f) * 0.5f;
         mColorBuffer.color.g = (Framework::Math::MathUtil::cos(mAlphaTheta * 2) + 1.0f) * 0.5f;
         mColorBuffer.color.b = (Framework::Math::MathUtil::cos(mAlphaTheta * 7) + 1.0f) * 0.5f;
-        //mColorConstantBuffer->updateBuffer(mColorBuffer);
 
         mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(0, mAlphaTheta * 0.01f, 0)));
         mMVP.view = Matrix4x4::transposition(Matrix4x4::createView({ Vector3(0,0,-10),Vector3(0,0,0),Vector3(0,1,0) }));
         float ratio = static_cast<float>(Framework::Define::Config::getInstance().screenWidth) / static_cast<float>(Framework::Define::Config::getInstance().screenHeight);
         mMVP.proj = Matrix4x4::transposition(Matrix4x4::createProjection({ 45.0f,ratio,0.1f,1000.0f }));
-        //mMVPConstantBuffer->updateBuffer(mMVP);
-        //mRotate += 0.1f;
 
         if (Framework::Device::GameDevice::getInstance().getInputManager()->getKeyboard().getKeyDown(Framework::Input::KeyCode::A)) {
             mMode = !mMode;
