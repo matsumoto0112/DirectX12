@@ -56,26 +56,13 @@ public:
     */
     void addToCommandList(ID3D12GraphicsCommandList* commandList);
     /**
-    * @brief コンスタントパラメータを追加する
-    */
-    void addConstantBufferParameter(VisibilityType visibility, UINT shaderRegisterNum);
-    /**
-    * @brief テクスチャパラメータを追加する
-    */
-    void addTextureParameter(VisibilityType visibility, UINT shaderRegisterNum);
-    /**
-    * @brief サンプラーパラメータを追加する
-    */
-    void addSamplerParameter(VisibilityType visibility, UINT shaderRegisterNum);
-    /**
     * @brief スタティックサンプラーを追加する
     */
     void addStaticSamplerParameter(const D3D12_STATIC_SAMPLER_DESC& sampler);
-//private:
+    //private:
     D3D12_VERSIONED_ROOT_SIGNATURE_DESC mRootSignatureDesc;
     ComPtr<ID3D12RootSignature> mRootSignature;
     std::vector<D3D12_ROOT_PARAMETER1> mRootParameters; //!< ルートパラメータ配列
-    std::vector<TextureParameterInfo> mTextureParameterInfos; //!< テクスチャパラメータを作成するためのデータ
     std::vector<D3D12_STATIC_SAMPLER_DESC> mSamplers; //!< スタティックサンプラー配列
 };
 

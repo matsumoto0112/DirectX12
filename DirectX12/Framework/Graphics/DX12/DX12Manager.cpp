@@ -2,6 +2,7 @@
 #include "Framework/Utility/IO/ByteReader.h"
 #include "Framework/Graphics/DX12/Helper.h"
 #include "Framework/Define/Path.h"
+#include "Framework/Define/Render.h"
 #include "Framework/Utility/IO/ShaderReader.h"
 #include "Framework/Graphics/DX12/Desc/Sampler.h"
 #include "Framework/Graphics/DX12/Desc/Rasterizer.h"
@@ -137,71 +138,6 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
         D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT,
         IID_PPV_ARGS(&mCommandAllocator)));
 
-    D3D12_STATIC_SAMPLER_DESC sampler = Sampler::createStaticSampler(FilterMode::Linear, AddressMode::Wrap, VisibilityType::Pixel, 0);
-
-    //mRootSignature = std::make_shared<RootSignature>();
-    //mRootSignature->addConstantBufferParameter(VisibilityType::All, 0);
-    //mRootSignature->addTextureParameter(VisibilityType::All, 0);
-    //mRootSignature->addConstantBufferParameter(VisibilityType::All, 1);
-    //mRootSignature->getRootSignature()
-
-    auto  createRange = [](D3D12_DESCRIPTOR_RANGE_TYPE type, UINT num, UINT baseRegisterNumber, UINT registerSpace, D3D12_DESCRIPTOR_RANGE_FLAGS flag, UINT offset = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND) {
-        D3D12_DESCRIPTOR_RANGE1 range{};
-        range.RangeType = type;
-        range.NumDescriptors = num;
-        range.BaseShaderRegister = baseRegisterNumber;
-        range.RegisterSpace = registerSpace;
-        range.Flags = flag;
-        range.OffsetInDescriptorsFromTableStart = offset;
-        return range;
-    };
-
-    auto createRootSignatureDesc = [](UINT num,
-        const D3D12_ROOT_PARAMETER1* param,
-        UINT numStaticSampler,
-        const D3D12_STATIC_SAMPLER_DESC* sampler,
-        D3D12_ROOT_SIGNATURE_FLAGS flag) {
-            D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc{};
-            rootSignatureDesc.Version = D3D_ROOT_SIGNATURE_VERSION::D3D_ROOT_SIGNATURE_VERSION_1;
-            rootSignatureDesc.Desc_1_1.NumParameters = num;
-            rootSignatureDesc.Desc_1_1.pParameters = param;
-            rootSignatureDesc.Desc_1_1.NumStaticSamplers = numStaticSampler;
-            rootSignatureDesc.Desc_1_1.pStaticSamplers = sampler;
-            rootSignatureDesc.Desc_1_1.Flags = flag;
-            return rootSignatureDesc;
-    };
-
-
-    constexpr UINT CONSTANT_BUFFER_NUM = 16 * 10000;
-    constexpr UINT TEXTURE_MAX_NUM = 1;
-    D3D12_VERSIONED_ROOT_SIGNATURE_DESC vrsd;
-    D3D12_DESCRIPTOR_RANGE1 CBRange[1];
-    CBRange[0] = createRange(D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_CBV,
-        CONSTANT_BUFFER_NUM, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAGS::D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
-    D3D12_DESCRIPTOR_RANGE1 TEXRange[1];
-    TEXRange[0] = createRange(D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
-        TEXTURE_MAX_NUM, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAGS::D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
-
-    D3D12_ROOT_PARAMETER1 Pamameter[2]{};
-    Pamameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    Pamameter[0].DescriptorTable.NumDescriptorRanges = 1;
-    Pamameter[0].DescriptorTable.pDescriptorRanges = &CBRange[0];
-    Pamameter[0].ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_ALL;
-
-    Pamameter[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-    Pamameter[1].DescriptorTable.NumDescriptorRanges = 1;
-    Pamameter[1].DescriptorTable.pDescriptorRanges = &TEXRange[0];
-    Pamameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_ALL;
-
-    vrsd = createRootSignatureDesc(_countof(Pamameter), Pamameter, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-    ComPtr<ID3DBlob> sigunature, error;
-    throwIfFailed(D3D12SerializeVersionedRootSignature(&vrsd, &sigunature, &error));
-
-    throwIfFailed(DXInterfaceAccessor::getDevice()->CreateRootSignature(0,
-        sigunature->GetBufferPointer(),
-        sigunature->GetBufferSize(),
-        IID_PPV_ARGS(&mRootSignature)));
-
     {
         auto createBlendState = []() {
             D3D12_BLEND_DESC blendDesc{};
@@ -221,9 +157,11 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
         Framework::Utility::ShaderReader psreader((std::string)Framework::Define::Path::getInstance().shader + "PixelShader.cso");
         std::vector<BYTE> ps = psreader.get();
 
-        //mDefaultPipeline = std::make_unique<Pipeline>(mRootSignature);
-        mDefaultPipeline = std::make_unique<Pipeline>();
-        mDefaultPipeline->mPSODesc.pRootSignature = mRootSignature.Get();
+        mRootSignature = std::make_shared<RootSignature>();
+        mRootSignature->addStaticSamplerParameter(Sampler::createStaticSampler(FilterMode::Linear, AddressMode::Wrap, VisibilityType::All, 0));
+        mRootSignature->createDX12RootSignature();
+
+        mDefaultPipeline = std::make_unique<Pipeline>(mRootSignature);
         mDefaultPipeline->setVertexShader({ vs.data(),vs.size() });
         mDefaultPipeline->setPixelShader({ ps.data(),ps.size() });
         mDefaultPipeline->setInputLayout({ elemDescs.data(),(UINT)elemDescs.size() });
@@ -234,7 +172,6 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
         mDefaultPipeline->setSampleMask(UINT_MAX);
         mDefaultPipeline->setRenderTarget({ DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM });
         mDefaultPipeline->createPipelineState();
-
 
         throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator.Get(), mDefaultPipeline->getPipelineState(), IID_PPV_ARGS(&mCommandList)));
 
@@ -268,8 +205,7 @@ void DX12Manager::drawBegin() {
     throwIfFailed(mCommandAllocator->Reset());
     throwIfFailed(mCommandList->Reset(mCommandAllocator.Get(), mDefaultPipeline->getPipelineState()));
 
-    //mRootSignature->addToCommandList(mCommandList.Get());
-    mCommandList->SetGraphicsRootSignature(mRootSignature.Get());
+    mRootSignature->addToCommandList(mCommandList.Get());
     mDefaultPipeline->addToCommandList(mCommandList.Get());
 
     mCommandList->RSSetViewports(1, &mViewport);

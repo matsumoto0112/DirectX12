@@ -33,6 +33,7 @@
 #include "Framework/Graphics/DX12/Render/RootSignature.h"
 #include "Framework/Graphics/DX12/Desc/Sampler.h"
 #include "Framework/Utility/IO/ShaderReader.h"
+#include "Framework/Define/Render.h"
 
 namespace {
 using namespace Framework::Graphics;
@@ -145,13 +146,12 @@ public:
 
 
         //CBV
-        UINT MAX_CONSTANT_BUFFER_NUM = 16 * 10000;
         D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc{};
-        cbvHeapDesc.NumDescriptors = MAX_CONSTANT_BUFFER_NUM;
+        cbvHeapDesc.NumDescriptors = Framework::Define::Render::MAX_CONSTANT_BUFFER_USE_NUM_PER_ONE_FRAME;
         cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         throwIfFailed(DXInterfaceAccessor::getDevice()->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCBVHeap)));
-        UINT size = Framework::Graphics::sizeAlignment(sizeof(MVP)) * MAX_CONSTANT_BUFFER_NUM;
+        UINT size = Framework::Graphics::sizeAlignment(sizeof(MVP)) * Framework::Define::Render::MAX_CONSTANT_BUFFER_USE_NUM_PER_ONE_FRAME;
         throwIfFailed(DXInterfaceAccessor::getDevice()->CreateCommittedResource(
             &createProperty(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD),
             D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
@@ -167,17 +167,11 @@ public:
         memcpy(mCBVDataBegin + 1, &mColorBuffer, sizeof(Color4));
         mConstantBuffer->Unmap(0, nullptr);
 
-
-
-        UINT MAX_TEXTURE_BUFFER_NUM = 1;
         D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
-        srvHeapDesc.NumDescriptors = MAX_TEXTURE_BUFFER_NUM;
+        srvHeapDesc.NumDescriptors = Framework::Define::Render::MAX_TEXTURE_USE_NUM_PER_ONE_FRAME;
         srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         throwIfFailed(DXInterfaceAccessor::getDevice()->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSRVHeap)));
-
-
-
 
         mAlphaTheta = 0.0f;
         return true;
@@ -202,30 +196,11 @@ protected:
         }
     }
     virtual void draw() override {
+        using Framework::Math::Vector3;
+        using Framework::Math::Matrix4x4;
+
         Framework::Graphics::DX12Manager::getInstance().drawBegin();
         ID3D12GraphicsCommandList* mCommandList = Framework::Graphics::DX12Manager::getInstance().getCommandList();
-
-        struct { char buf[256]; } *mCBVDataBegin;
-        D3D12_RANGE range{ 0,0 };
-        throwIfFailed(mConstantBuffer->Map(0, &range, reinterpret_cast<void**>(&mCBVDataBegin)));
-        memcpy(mCBVDataBegin, &mMVP, sizeof(MVP));
-        memcpy(mCBVDataBegin + 1, &mColorBuffer, sizeof(Color4));
-        mConstantBuffer->Unmap(0, nullptr);
-
-        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
-        cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress();
-        cbvDesc.SizeInBytes = sizeAlignment(sizeof(MVP));
-
-        DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, mCBVHeap->GetCPUDescriptorHandleForHeapStart());
-
-        cbvDesc = D3D12_CONSTANT_BUFFER_VIEW_DESC{};
-        cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress() + 0x100;
-        cbvDesc.SizeInBytes = sizeAlignment(sizeof(Color4));
-
-        D3D12_CPU_DESCRIPTOR_HANDLE ptr2 = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
-        ptr2.ptr += (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-        DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr2);
-
         if (mMode) {
             DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture->mTexture.Get(), nullptr, mSRVHeap->GetCPUDescriptorHandleForHeapStart());
         }
@@ -233,6 +208,32 @@ protected:
             DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture2->mTexture.Get(), nullptr, mSRVHeap->GetCPUDescriptorHandleForHeapStart());
         }
 
+        struct { char buf[256]; } *mCBVDataBegin;
+        D3D12_RANGE range{ 0,0 };
+        throwIfFailed(mConstantBuffer->Map(0, &range, reinterpret_cast<void**>(&mCBVDataBegin)));
+        memcpy(mCBVDataBegin, &mMVP, sizeof(MVP));
+        memcpy(mCBVDataBegin + 1, &mColorBuffer, sizeof(Color4));
+        mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(1.0f, 0, 0)));
+        memcpy(mCBVDataBegin + 2, &mMVP, sizeof(MVP));
+        memcpy(mCBVDataBegin + 3, &mColorBuffer, sizeof(Color4));
+        {
+            D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
+            cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress();
+            cbvDesc.SizeInBytes = sizeAlignment(sizeof(MVP));
+
+            D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
+            ptr.ptr += 0 * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+            DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr);
+        }
+        {
+            D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
+            cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress() + 0x100 * 1;
+            cbvDesc.SizeInBytes = sizeAlignment(sizeof(Color4));
+
+            D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
+            ptr.ptr += 1 * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+            DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr);
+        }
         ID3D12DescriptorHeap* heaps[] = { mCBVHeap.Get(), };
         mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
 
@@ -241,29 +242,47 @@ protected:
         ID3D12DescriptorHeap* heaps2[] = { mSRVHeap.Get(), };
         mCommandList->SetDescriptorHeaps(_countof(heaps2), heaps2);
 
-
         mCommandList->SetGraphicsRootDescriptorTable(1, mSRVHeap->GetGPUDescriptorHandleForHeapStart());
-
-        //mMVPConstantBuffer->addToCommandList(mCommandList, 0);
-        //mColorConstantBuffer->addToCommandList(mCommandList, 2);
-        //if (mMode) {
-        //    ID3D12DescriptorHeap* heaps[] = { mTexture->getDescriptorHeap() };
-        //    mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
-        //    mTexture->addToCommandList(mCommandList, 1);
-        //}
-        //else {
-        //    ID3D12DescriptorHeap* heaps[] = { mTexture2->getDescriptorHeap() };
-        //    mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
-        //    mTexture2->addToCommandList(mCommandList, 1);
-        //}
 
         mVertexBuffer->addToCommandList(mCommandList);
         mIndexBuffer->addToCommandList(mCommandList);
         mIndexBuffer->drawCall(mCommandList);
 
-        using Framework::Math::Vector3;
-        using Framework::Math::Matrix4x4;
 
+
+        {
+            D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
+            cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress() + 0x100 * 2;
+            cbvDesc.SizeInBytes = sizeAlignment(sizeof(MVP));
+
+            D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
+            ptr.ptr += 2 * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+            DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr);
+        }
+
+        {
+            D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
+            cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress() + 0x100 * 3;
+            cbvDesc.SizeInBytes = sizeAlignment(sizeof(Color4));
+
+            D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
+            ptr.ptr += 3 * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+            DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr);
+        }
+
+
+
+        ID3D12DescriptorHeap* heap3[] = { mCBVHeap.Get() };
+        mCommandList->SetDescriptorHeaps(_countof(heap3), heap3);
+        D3D12_GPU_DESCRIPTOR_HANDLE addr = mCBVHeap->GetGPUDescriptorHandleForHeapStart();
+        addr.ptr += 2 * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+        mCommandList->SetGraphicsRootDescriptorTable(0, addr);
+
+        mVertexBuffer->addToCommandList(mCommandList);
+        mIndexBuffer->addToCommandList(mCommandList);
+        mIndexBuffer->drawCall(mCommandList);
+
+        mConstantBuffer->Unmap(0, nullptr);
         Framework::Graphics::DX12Manager::getInstance().drawEnd();
 
     }
