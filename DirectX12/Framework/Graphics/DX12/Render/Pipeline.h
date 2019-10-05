@@ -16,10 +16,14 @@ public:
     */
     Pipeline(std::shared_ptr<RootSignature> rootSignature);
     /**
+    * @brief コンストラクタ
+    */
+    Pipeline();
+    /**
     * @brief デストラクタ
     */
     ~Pipeline();
-    
+
     void setVertexShader(const D3D12_SHADER_BYTECODE& vertexShader);
     void setPixelShader(const D3D12_SHADER_BYTECODE& pixelShader);
     void setInputLayout(const D3D12_INPUT_LAYOUT_DESC& inputLayout);
@@ -33,7 +37,7 @@ public:
     void createPipelineState();
     ID3D12PipelineState* getPipelineState() const { return mPipelineState.Get(); }
     void addToCommandList(ID3D12GraphicsCommandList* commandList);
-private:
+//private:
     D3D12_GRAPHICS_PIPELINE_STATE_DESC mPSODesc;
     ComPtr<ID3D12PipelineState> mPipelineState; //!< パイプラインステート
     std::shared_ptr<RootSignature> mRootSignature;

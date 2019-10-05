@@ -61,40 +61,40 @@ RootSignature::RootSignature() { }
 RootSignature::~RootSignature() { }
 
 void RootSignature::createDX12RootSignature() {
-    const int size = mTextureParameterInfos.size();
-    std::vector<D3D12_DESCRIPTOR_RANGE1> ranges(size);
-    for (int i = 0; i < size; i++) {
-        ranges[i] = createRange(D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
-            1,
-            mTextureParameterInfos[i].registerNum,
-            0,
-            D3D12_DESCRIPTOR_RANGE_FLAGS::D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
-    }
+    //const int size = mTextureParameterInfos.size();
+    //std::vector<D3D12_DESCRIPTOR_RANGE1> ranges(size);
+    //for (int i = 0; i < size; i++) {
+    //    ranges[i] = createRange(D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV,
+    //        1,
+    //        mTextureParameterInfos[i].registerNum,
+    //        0,
+    //        D3D12_DESCRIPTOR_RANGE_FLAGS::D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
+    //}
 
-    int index = 0;
-    for (int i = 0; i < mRootParameters.size(); i++) {
-        if (mRootParameters[i].ParameterType == D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) {
-            mRootParameters[i].DescriptorTable.NumDescriptorRanges = 1;
-            mRootParameters[i].DescriptorTable.pDescriptorRanges = &ranges[index++];
-        }
-    }
-    D3D12_ROOT_SIGNATURE_FLAGS  rootSignatureFlags =
-        D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+    //int index = 0;
+    //for (int i = 0; i < mRootParameters.size(); i++) {
+    //    if (mRootParameters[i].ParameterType == D3D12_ROOT_PARAMETER_TYPE::D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) {
+    //        mRootParameters[i].DescriptorTable.NumDescriptorRanges = 1;
+    //        mRootParameters[i].DescriptorTable.pDescriptorRanges = &ranges[index++];
+    //    }
+    //}
+    //D3D12_ROOT_SIGNATURE_FLAGS  rootSignatureFlags =
+    //    D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-    D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc = createRootSignatureDesc(
-        mRootParameters.size(),
-        mRootParameters.data(),
-        mSamplers.size(),
-        mSamplers.data(),
-        rootSignatureFlags);
+    //D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc = createRootSignatureDesc(
+    //    mRootParameters.size(),
+    //    mRootParameters.data(),
+    //    mSamplers.size(),
+    //    mSamplers.data(),
+    //    rootSignatureFlags);
 
-    ComPtr<ID3DBlob> sigunature, error;
-    throwIfFailed(D3D12SerializeVersionedRootSignature(&rootSignatureDesc, &sigunature, &error));
+    //ComPtr<ID3DBlob> sigunature, error;
+    //throwIfFailed(D3D12SerializeVersionedRootSignature(&rootSignatureDesc, &sigunature, &error));
 
-    throwIfFailed(DXInterfaceAccessor::getDevice()->CreateRootSignature(0,
-        sigunature->GetBufferPointer(),
-        sigunature->GetBufferSize(),
-        IID_PPV_ARGS(&mRootSignature)));
+    //throwIfFailed(DXInterfaceAccessor::getDevice()->CreateRootSignature(0,
+    //    sigunature->GetBufferPointer(),
+    //    sigunature->GetBufferSize(),
+    //    IID_PPV_ARGS(&mRootSignature)));
 }
 
 void RootSignature::addToCommandList(ID3D12GraphicsCommandList* commandList) {

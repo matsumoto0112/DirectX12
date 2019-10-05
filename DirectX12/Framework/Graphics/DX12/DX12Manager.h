@@ -60,7 +60,7 @@ public:
     * @brief フレーム経過まで待機する
     */
     void waitForPreviousFrame();
-private:
+//private:
     static constexpr UINT FRAME_COUNT = 2;
     ComPtr<ID3D12Device> mDevice; //!< デバイス
     ComPtr<ID3D12CommandQueue> mCommandQueue; //!< コマンドキュー
@@ -76,10 +76,10 @@ private:
     UINT mRTVDescriptorSize; //!< RTVディスクリプタヒープの大きさ
     D3D12_VIEWPORT mViewport;
     D3D12_RECT mScissorRect;
-    //ComPtr<ID3D12RootSignature> mRootSignature; //!< ルートシグネチャ
+    ComPtr<ID3D12RootSignature> mRootSignature; //!< ルートシグネチャ
     std::unique_ptr<Pipeline> mDefaultPipeline;
     //ComPtr<ID3D12PipelineState> mPipelineState; //!< パイプラインステート
-    std::shared_ptr<RootSignature> mRootSignature;
+    //std::shared_ptr<RootSignature> mRootSignature;
 };
 
 } //Graphics 

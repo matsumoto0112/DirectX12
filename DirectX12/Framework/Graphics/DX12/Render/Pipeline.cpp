@@ -9,6 +9,10 @@ Pipeline::Pipeline(std::shared_ptr<RootSignature> rootSignature)
     mPSODesc.pRootSignature = rootSignature->getRootSignature();
 }
 
+Pipeline::Pipeline()
+    :mPSODesc{} { }
+
+
 Pipeline::~Pipeline() { }
 
 void Pipeline::setVertexShader(const D3D12_SHADER_BYTECODE& vertexShader) {

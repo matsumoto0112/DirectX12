@@ -71,7 +71,7 @@ public:
     * @brief スタティックサンプラーを追加する
     */
     void addStaticSamplerParameter(const D3D12_STATIC_SAMPLER_DESC& sampler);
-private:
+//private:
     D3D12_VERSIONED_ROOT_SIGNATURE_DESC mRootSignatureDesc;
     ComPtr<ID3D12RootSignature> mRootSignature;
     std::vector<D3D12_ROOT_PARAMETER1> mRootParameters; //!< ルートパラメータ配列

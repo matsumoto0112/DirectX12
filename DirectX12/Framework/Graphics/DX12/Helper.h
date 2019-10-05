@@ -86,5 +86,9 @@ inline D3D12_RESOURCE_BARRIER createResourceBarrier(ID3D12Resource* resource,
     return result;
 }
 
+inline UINT sizeAlignment(UINT size) {
+    return ((size + 0xff) & ~0xff);
+}
+
 } //Graphics 
 } //Framework 
