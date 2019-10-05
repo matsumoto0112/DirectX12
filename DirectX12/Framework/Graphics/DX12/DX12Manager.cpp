@@ -193,7 +193,7 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
     Pamameter[1].DescriptorTable.pDescriptorRanges = &TEXRange[0];
     Pamameter[1].ShaderVisibility = D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_ALL;
 
-    vrsd = createRootSignatureDesc(2, Pamameter, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+    vrsd = createRootSignatureDesc(_countof(Pamameter), Pamameter, 1, &sampler, D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
     ComPtr<ID3DBlob> sigunature, error;
     throwIfFailed(D3D12SerializeVersionedRootSignature(&vrsd, &sigunature, &error));
 

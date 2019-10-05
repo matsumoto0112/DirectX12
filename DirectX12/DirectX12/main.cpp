@@ -121,8 +121,8 @@ public:
         mVertexBuffer = std::make_unique<Framework::Graphics::VertexBuffer>(vertices);
         mIndexBuffer = std::make_unique<Framework::Graphics::IndexBuffer>(indices, Framework::Graphics::PrimitiveTolopolyType::TriangleList);
 
-        //mTexture = std::make_unique<Framework::Graphics::Texture>((std::string)Framework::Define::Path::getInstance().texture + "bg.png");
-        //mTexture2 = std::make_unique<Framework::Graphics::Texture>((std::string)Framework::Define::Path::getInstance().texture + "bg2.png");
+        mTexture = std::make_unique<Framework::Graphics::Texture>((std::string)Framework::Define::Path::getInstance().texture + "bg.png");
+        mTexture2 = std::make_unique<Framework::Graphics::Texture>((std::string)Framework::Define::Path::getInstance().texture + "bg2.png");
 
         //mColorConstantBuffer = std::make_unique<Framework::Graphics::ConstantBuffer>(mColorBuffer);
         //mMVPConstantBuffer = std::make_unique<Framework::Graphics::ConstantBuffer>(mMVP);
@@ -160,6 +160,15 @@ public:
             nullptr,
             IID_PPV_ARGS(&mConstantBuffer)));
 
+        struct { char buf[256]; } *mCBVDataBegin;
+        D3D12_RANGE range{ 0,0 };
+        throwIfFailed(mConstantBuffer->Map(0, &range, reinterpret_cast<void**>(&mCBVDataBegin)));
+        memcpy(mCBVDataBegin, &mMVP, sizeof(MVP));
+        memcpy(mCBVDataBegin + 1, &mColorBuffer, sizeof(Color4));
+        mConstantBuffer->Unmap(0, nullptr);
+
+
+
         UINT MAX_TEXTURE_BUFFER_NUM = 1;
         D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
         srvHeapDesc.NumDescriptors = MAX_TEXTURE_BUFFER_NUM;
@@ -167,14 +176,6 @@ public:
         srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         throwIfFailed(DXInterfaceAccessor::getDevice()->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSRVHeap)));
 
-
-
-        struct { char buf[256]; } *mCBVDataBegin;
-        D3D12_RANGE range{ 0,0 };
-        throwIfFailed(mConstantBuffer->Map(0, &range, reinterpret_cast<void**>(&mCBVDataBegin)));
-        memcpy(mCBVDataBegin, &mMVP, sizeof(MVP));
-        memcpy(mCBVDataBegin + 1, &mColorBuffer, sizeof(Color4));
-        mConstantBuffer->Unmap(0, nullptr);
 
 
 
@@ -218,8 +219,7 @@ protected:
         cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress();
         cbvDesc.SizeInBytes = sizeAlignment(sizeof(MVP));
 
-        D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
-        DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr);
+        DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, mCBVHeap->GetCPUDescriptorHandleForHeapStart());
 
         cbvDesc = D3D12_CONSTANT_BUFFER_VIEW_DESC{};
         cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress() + 0x100;
@@ -229,11 +229,23 @@ protected:
         ptr2.ptr += (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
         DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr2);
 
-        ID3D12DescriptorHeap* heaps = { mCBVHeap.Get() };
-        mCommandList->SetDescriptorHeaps(1, &heaps);
+        if (mMode) {
+            DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture->mTexture.Get(), nullptr, mSRVHeap->GetCPUDescriptorHandleForHeapStart());
+        }
+        else {
+            DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture2->mTexture.Get(), nullptr, mSRVHeap->GetCPUDescriptorHandleForHeapStart());
+        }
 
-        D3D12_GPU_DESCRIPTOR_HANDLE addr = mCBVHeap->GetGPUDescriptorHandleForHeapStart();
-        mCommandList->SetGraphicsRootDescriptorTable(0, addr);
+        ID3D12DescriptorHeap* heaps[] = { mCBVHeap.Get(), };
+        mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
+
+        mCommandList->SetGraphicsRootDescriptorTable(0, mCBVHeap->GetGPUDescriptorHandleForHeapStart());
+
+        ID3D12DescriptorHeap* heaps2[] = { mSRVHeap.Get(), };
+        mCommandList->SetDescriptorHeaps(_countof(heaps2), heaps2);
+
+
+        mCommandList->SetGraphicsRootDescriptorTable(1, mSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
         //mMVPConstantBuffer->addToCommandList(mCommandList, 0);
         //mColorConstantBuffer->addToCommandList(mCommandList, 2);
@@ -269,8 +281,8 @@ private:
     struct ShaderObject {
         std::vector<BYTE> code;
     };
-    //std::unique_ptr<Framework::Graphics::Texture> mTexture; //!< テクスチャ
-    //std::unique_ptr<Framework::Graphics::Texture> mTexture2; //!< テクスチャ
+    std::unique_ptr<Framework::Graphics::Texture> mTexture; //!< テクスチャ
+    std::unique_ptr<Framework::Graphics::Texture> mTexture2; //!< テクスチャ
 
     //std::unique_ptr<Framework::Graphics::Pipeline> mPipeline;
     //std::shared_ptr<Framework::Graphics::RootSignature> mRootSignature;
