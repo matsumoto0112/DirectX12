@@ -96,5 +96,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Render\Pipeline.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Desc\Sampler.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\VisibilityType.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Desc\Rasterizer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Desc\BlendState.h" />
   </ItemGroup>
 </Project>

@@ -57,6 +57,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Device\GameDevice.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Game.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Color4.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Desc\BlendState.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Desc\Rasterizer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Desc\Sampler.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\RegisterNumCounter.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Render\Pipeline.h" />

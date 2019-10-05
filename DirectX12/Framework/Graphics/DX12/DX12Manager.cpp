@@ -4,6 +4,8 @@
 #include "Framework/Define/Path.h"
 #include "Framework/Utility/IO/ShaderReader.h"
 #include "Framework/Graphics/DX12/Desc/Sampler.h"
+#include "Framework/Graphics/DX12/Desc/Rasterizer.h"
+#include "Framework/Graphics/DX12/Desc/BlendState.h"
 
 namespace {
 /**
@@ -145,32 +147,11 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
     mRootSignature->createDX12RootSignature();
 
     {
-        auto createRasterizerState = []() {
-            D3D12_RASTERIZER_DESC rasDesc{};
-            rasDesc.FillMode = D3D12_FILL_MODE::D3D12_FILL_MODE_SOLID;
-            rasDesc.CullMode = D3D12_CULL_MODE::D3D12_CULL_MODE_BACK;
-            rasDesc.FrontCounterClockwise = FALSE;
-            rasDesc.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
-            rasDesc.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
-            rasDesc.DepthClipEnable = TRUE;
-            rasDesc.MultisampleEnable = FALSE;
-            rasDesc.AntialiasedLineEnable = FALSE;
-            rasDesc.ForcedSampleCount = 0;
-            rasDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE::D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
-            return rasDesc;
-        };
-
         auto createBlendState = []() {
             D3D12_BLEND_DESC blendDesc{};
             blendDesc.AlphaToCoverageEnable = FALSE;
             blendDesc.IndependentBlendEnable = FALSE;
-            const D3D12_RENDER_TARGET_BLEND_DESC defaultRenderTargetBlendDesc = {
-                FALSE,FALSE,
-                D3D12_BLEND::D3D12_BLEND_ONE,D3D12_BLEND::D3D12_BLEND_ZERO,D3D12_BLEND_OP::D3D12_BLEND_OP_ADD,
-                D3D12_BLEND::D3D12_BLEND_ONE,D3D12_BLEND::D3D12_BLEND_ZERO,D3D12_BLEND_OP::D3D12_BLEND_OP_ADD,
-                D3D12_LOGIC_OP::D3D12_LOGIC_OP_NOOP,
-                D3D12_COLOR_WRITE_ENABLE::D3D12_COLOR_WRITE_ENABLE_ALL
-            };
+            const D3D12_RENDER_TARGET_BLEND_DESC defaultRenderTargetBlendDesc = BlendState::alignmentBlendDesc();
             for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++) {
                 blendDesc.RenderTarget[i] = defaultRenderTargetBlendDesc;
             }
@@ -189,7 +170,7 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
         mDefaultPipeline->setPixelShader({ ps.data(),ps.size() });
         mDefaultPipeline->setInputLayout({ elemDescs.data(),(UINT)elemDescs.size() });
         mDefaultPipeline->setBlendState(createBlendState());
-        mDefaultPipeline->setRasterizerState(createRasterizerState());
+        mDefaultPipeline->setRasterizerState(Rasterizer(FillMode::Solid, CullMode::None));
         mDefaultPipeline->setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE::D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
         mDefaultPipeline->setSampleDesc({ 1,0 });
         mDefaultPipeline->setSampleMask(UINT_MAX);
@@ -234,12 +215,13 @@ void DX12Manager::drawBegin() {
 
     mCommandList->RSSetViewports(1, &mViewport);
     mCommandList->RSSetScissorRects(1, &mScissorRect);
+
     mCommandList->ResourceBarrier(1, &createResourceBarrier(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET));
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle{};
     rtvHandle.ptr = static_cast<SIZE_T>(mRTVHeap->GetCPUDescriptorHandleForHeapStart().ptr + INT64(mFrameIndex) * UINT64(mRTVDescriptorSize));
     mCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
-    const float clear[] = { 0.65f,0.2f,0.48f,0.0f };
+    const float clear[] = { 0.0f,0.0f,0.0f,0.0f };
     mCommandList->ClearRenderTargetView(rtvHandle, clear, 0, nullptr);
 }
 

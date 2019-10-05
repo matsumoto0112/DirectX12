@@ -28,12 +28,16 @@ enum class AddressMode {
 
 /**
 * @class Sampler
-* @brief discription
+* @brief サンプラーデスク
 */
 class Sampler {
 public:
     /**
-    * @brief コンストラクタ
+    * @brief スタティックサンプラーを作成する
+    * @param filter フィルターモード
+    * @param address アドレスモード
+    * @param visibility シェーダーの可視性の設定
+    * @param registerNum シェーダーでのレジスター番号
     */
     static inline D3D12_STATIC_SAMPLER_DESC createStaticSampler(
         FilterMode filter,
@@ -56,6 +60,9 @@ public:
         return sampler;
     }
 private:
+    /**
+    * @brief アドレスモードをDX12用に変換する
+    */
     static inline D3D12_TEXTURE_ADDRESS_MODE toD3D12_TEXTURE_ADDRESS_MODE(AddressMode address) {
         switch (address) {
             case Framework::Graphics::AddressMode::Wrap:
@@ -70,6 +77,9 @@ private:
                 return D3D12_TEXTURE_ADDRESS_MODE::D3D12_TEXTURE_ADDRESS_MODE_MIRROR_ONCE;
         }
     }
+    /**
+    * @brief フィルターモードをDX12用に変換する
+    */
     static inline D3D12_FILTER toD3D12_FILTER(FilterMode filter) {
         switch (filter) {
             case Framework::Graphics::FilterMode::Linear:

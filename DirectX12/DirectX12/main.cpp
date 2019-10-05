@@ -31,6 +31,8 @@
 #include "Framework/Graphics/DX12/Helper.h"
 #include "Framework/Graphics/DX12/Render/Pipeline.h"
 #include "Framework/Graphics/DX12/Render/RootSignature.h"
+#include "Framework/Graphics/DX12/Desc/Sampler.h"
+#include "Framework/Utility/IO/ShaderReader.h"
 
 namespace {
 using namespace Framework::Graphics;
@@ -125,25 +127,34 @@ public:
         mColorConstantBuffer = std::make_unique<Framework::Graphics::ConstantBuffer>(mColorBuffer);
         mMVPConstantBuffer = std::make_unique<Framework::Graphics::ConstantBuffer>(mMVP);
 
-        mRootSignature = std::make_unique<Framework::Graphics::RootSignature>();
+        mRootSignature = std::make_shared<Framework::Graphics::RootSignature>();
         mRootSignature->addConstantBufferParameter(Framework::Graphics::VisibilityType::All, 0);
         mRootSignature->addConstantBufferParameter(Framework::Graphics::VisibilityType::All, 1);
         mRootSignature->addConstantBufferParameter(Framework::Graphics::VisibilityType::All, 2);
         mRootSignature->addTextureParameter(Framework::Graphics::VisibilityType::All, 0);
-        //mRootSignature->addStaticSamplerParameter();
+        mRootSignature->addStaticSamplerParameter(Framework::Graphics::Sampler::createStaticSampler(Framework::Graphics::FilterMode::Linear, Framework::Graphics::AddressMode::Wrap, Framework::Graphics::VisibilityType::Pixel, 0));
+        mRootSignature->createDX12RootSignature();
 
+        mPipeline = std::make_unique<Framework::Graphics::Pipeline>(mRootSignature);
+        Framework::Utility::ShaderReader vsReader((std::string)Framework::Define::Path::getInstance().shader + "2D/Texture2D_VS.cso");
+        mPipeline->setVertexShader({ vsReader.get().data(),vsReader.get().size() });
+        mPipeline->setInputLayout({ vsReader.getShaderReflection().data(),(UINT)vsReader.getShaderReflection().size() });
+        Framework::Utility::ShaderReader psReader((std::string)Framework::Define::Path::getInstance().shader + "2D/Texture2D_PS.cso");
+        mPipeline->setPixelShader({ psReader.get().data(),psReader.get().size() });
+        mPipeline->setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE::D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+
+        mAlphaTheta = 0.0f;
         return true;
     }
 protected:
     virtual void update() override {
-        Game::update();
-        mColorBuffer.color.r += 0.01f;
-        if (mColorBuffer.color.r >= 1.0f) mColorBuffer.color.r -= 1.0f;
-        mColorBuffer.color.g += 0.005f;
-        if (mColorBuffer.color.g >= 1.0f) mColorBuffer.color.g -= 1.0f;
-
         using Framework::Math::Vector3;
         using Framework::Math::Matrix4x4;
+        Game::update();
+        mAlphaTheta += 1.0f;
+        mColorBuffer.color.a = (Framework::Math::MathUtil::cos(mAlphaTheta) + 1.0f) * 0.5f;
+        mColorConstantBuffer->updateBuffer(mColorBuffer);
+
         mMVP.world = Matrix4x4::transposition(Matrix4x4::createRotationZ(mRotate) * Matrix4x4::createRotationY(mRotate * 2));
         mMVP.view = Matrix4x4::transposition(Matrix4x4::createView({ Vector3(0,0,-10),Vector3(0,0,0),Vector3(0,1,0) }));
         float ratio = static_cast<float>(Framework::Define::Config::getInstance().screenWidth) / static_cast<float>(Framework::Define::Config::getInstance().screenHeight);
@@ -176,6 +187,16 @@ protected:
         mIndexBuffer->addToCommandList(mCommandList);
         mIndexBuffer->drawCall(mCommandList);
 
+        using Framework::Math::Vector3;
+        using Framework::Math::Matrix4x4;
+
+        mMVP.world = Matrix4x4::transposition(Matrix4x4::createRotationZ(mRotate) * Matrix4x4::createRotationY(mRotate * 2) * Matrix4x4::createTranslate(Vector3(1, 0, 0)));
+        mMVPConstantBuffer->updateBuffer(mMVP);
+
+        mVertexBuffer->addToCommandList(mCommandList);
+        mIndexBuffer->addToCommandList(mCommandList);
+        mIndexBuffer->drawCall(mCommandList);
+
         Framework::Graphics::DX12Manager::getInstance().drawEnd();
 
     }
@@ -194,13 +215,14 @@ private:
     std::unique_ptr<Framework::Graphics::Texture> mTexture2; //!< テクスチャ
 
     std::unique_ptr<Framework::Graphics::Pipeline> mPipeline;
-    std::unique_ptr<Framework::Graphics::RootSignature> mRootSignature;
+    std::shared_ptr<Framework::Graphics::RootSignature> mRootSignature;
 
     std::unique_ptr<Framework::Graphics::VertexBuffer> mVertexBuffer; //!< 頂点バッファ
     std::unique_ptr<Framework::Graphics::IndexBuffer> mIndexBuffer; //!< インデックスバッファ
     std::unique_ptr<Framework::Graphics::ConstantBuffer> mColorConstantBuffer; //!< コンスタントバッファ
     std::unique_ptr<Framework::Graphics::ConstantBuffer> mMVPConstantBuffer; //!< コンスタントバッファ
     ColorBuffer mColorBuffer;
+    float mAlphaTheta;
     MVP mMVP;
     float mRotate;
     bool mMode;
