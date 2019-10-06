@@ -1,5 +1,6 @@
 #include "Pipeline.h"
 #include "Framework/Graphics/DX12/DXInterfaceAccessor.h"
+#include "Framework/Graphics/DX12/Helper.h"
 
 namespace Framework {
 namespace Graphics {

@@ -40,6 +40,7 @@
 #include "Framework/Utility/Time.h"
 #include "Framework/ImGUI/ImGUI.h"
 #include "Framework/Graphics/DX12/CBStruct.h"
+#include "Framework/Graphics/DX12/Resource/ConstantBuffer.h"
 
 namespace {
 using namespace Framework::Graphics;
@@ -164,34 +165,14 @@ public:
         mPipeline->setRasterizerState(Framework::Graphics::Rasterizer(Framework::Graphics::FillMode::Solid, Framework::Graphics::CullMode::Back));
         mPipeline->createPipelineState();
 
-        //CBV
-        D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc{ };
-        cbvHeapDesc.NumDescriptors = Framework::Define::Render::MAX_CONSTANT_BUFFER_USE_NUM_PER_ONE_FRAME;
-        cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        throwIfFailed(DXInterfaceAccessor::getDevice()->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCBVHeap)));
-        UINT size = Framework::Graphics::sizeAlignment(sizeof(Framework::Graphics::MVPCBuffer)) * Framework::Define::Render::MAX_CONSTANT_BUFFER_USE_NUM_PER_ONE_FRAME;
-        throwIfFailed(DXInterfaceAccessor::getDevice()->CreateCommittedResource(
-            &createProperty(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD),
-            D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
-            &createResource(size),
-            D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&mConstantBuffer)));
-
-        struct { char buf[256]; } *mCBVDataBegin;
-        D3D12_RANGE range{ 0,0 };
-        throwIfFailed(mConstantBuffer->Map(0, &range, reinterpret_cast<void**>(&mCBVDataBegin)));
-        memcpy(mCBVDataBegin, &mMVP, sizeof(Framework::Graphics::MVPCBuffer));
-        memcpy(mCBVDataBegin + 1, &mColorBuffer, sizeof(Framework::Graphics::Color4));
-        mConstantBuffer->Unmap(0, nullptr);
-
         D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
         srvHeapDesc.NumDescriptors = Framework::Define::Render::MAX_TEXTURE_USE_NUM_PER_ONE_FRAME;
         srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         throwIfFailed(DXInterfaceAccessor::getDevice()->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSRVHeap)));
 
+        mConstantBuffer = std::make_unique<ConstantBuffer>(10000);
+        mConstantBuffer2 = std::make_unique<ConstantBuffer>(10000);
         mAlphaTheta = 0.0f;
         mObjectNum = 2;
         return true;
@@ -242,10 +223,6 @@ protected:
 
         mCommandList->SetGraphicsRootDescriptorTable(1, mSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
-        struct { char buf[256]; } *mCBVDataBegin;
-        D3D12_RANGE range{ 0,0 };
-        throwIfFailed(mConstantBuffer->Map(0, &range, reinterpret_cast<void**>(&mCBVDataBegin)));
-
         for (int i = 0; i < mObjectNum; i++) {
             if (i == mObjectNum / 2) {
                 mPipeline->addToCommandList(mCommandList);
@@ -256,38 +233,29 @@ protected:
             float sin = Framework::Math::MathUtil::sin(theta);
             float cos = Framework::Math::MathUtil::cos(theta);
             mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(cos, sin, 0)));
-            memcpy(mCBVDataBegin + mvpOffset, &mMVP, sizeof(Framework::Graphics::MVPCBuffer));
-            memcpy(mCBVDataBegin + colorOffset, &mColorBuffer, sizeof(Framework::Graphics::ColorCBuffer));
-            {
-                D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
-                cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress() + 0x100 * mvpOffset;
-                cbvDesc.SizeInBytes = sizeAlignment(sizeof(Framework::Graphics::MVPCBuffer));
 
-                D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
-                ptr.ptr += mvpOffset * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-                DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr);
+            if (i % 2 == 0) {
+                mConstantBuffer->beginCBUpdate();
+
+                mConstantBuffer->updateBuffer(mMVP);
+                mConstantBuffer->updateBuffer(mColorBuffer);
+
+                mConstantBuffer->endCBUpdate(mCommandList);
             }
-            {
-                D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
-                cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress() + 0x100 * colorOffset;
-                cbvDesc.SizeInBytes = sizeAlignment(sizeof(Framework::Graphics::ColorCBuffer));
+            else {
+                mConstantBuffer2->beginCBUpdate();
 
-                D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
-                ptr.ptr += colorOffset * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-                DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr);
+                mConstantBuffer2->updateBuffer(mMVP);
+                mConstantBuffer2->updateBuffer(mColorBuffer);
+
+                mConstantBuffer2->endCBUpdate(mCommandList);
             }
-
-            ID3D12DescriptorHeap* heaps[] = { mCBVHeap.Get(), };
-            mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
-            D3D12_GPU_DESCRIPTOR_HANDLE addr = mCBVHeap->GetGPUDescriptorHandleForHeapStart();
-            addr.ptr += mvpOffset * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-            mCommandList->SetGraphicsRootDescriptorTable(0, addr);
 
             {
                 D3D12_CPU_DESCRIPTOR_HANDLE ptr = mSRVHeap->GetCPUDescriptorHandleForHeapStart();
                 ptr.ptr += i * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
                 //if (i % 2 == 0) {
-                    DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture->mTexture.Get(), nullptr, ptr);
+                DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture->mTexture.Get(), nullptr, ptr);
                 //}
                 //else {
                     //DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture2->mTexture.Get(), nullptr, ptr);
@@ -307,12 +275,13 @@ protected:
             mIndexBuffer->drawCall(mCommandList);
         }
 
-        mConstantBuffer->Unmap(0, nullptr);
 
         mCommandList->SetDescriptorHeaps(1, mImGUIDescriptorSrvHeap.GetAddressOf());
         ImGui::Render();
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList);
 
+        mConstantBuffer->endFrame();
+        mConstantBuffer2->endFrame();
         Framework::Graphics::DX12Manager::getInstance().drawEnd();
 
     }
@@ -338,12 +307,11 @@ private:
     std::unique_ptr<Framework::Graphics::IndexBuffer> mIndexBuffer; //!< インデックスバッファ
     std::unique_ptr<Pipeline> mPipeline;
     Framework::Graphics::ColorCBuffer mColorBuffer;
-    ComPtr<ID3D12Resource> mConstantBuffer;
-    ComPtr<ID3D12DescriptorHeap> mCBVHeap;
     ComPtr<ID3D12DescriptorHeap> mSRVHeap;
 
     ComPtr<ID3D12DescriptorHeap> mImGUIDescriptorSrvHeap;
-
+    std::unique_ptr<ConstantBuffer> mConstantBuffer;
+    std::unique_ptr<ConstantBuffer> mConstantBuffer2;
     float mAlphaTheta;
     Framework::Graphics::MVPCBuffer mMVP;
     float mRotate;
