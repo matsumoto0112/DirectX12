@@ -115,5 +115,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_impl_dx12.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_impl_win32.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Window\Procedure\ImguiProc.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Render\IMaterial.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\CBStruct.h" />
   </ItemGroup>
 </Project>

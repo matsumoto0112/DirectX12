@@ -39,6 +39,7 @@
 #include "Framework/Define/Render.h"
 #include "Framework/Utility/Time.h"
 #include "Framework/ImGUI/ImGUI.h"
+#include "Framework/Graphics/DX12/CBStruct.h"
 
 namespace {
 using namespace Framework::Graphics;
@@ -46,16 +47,6 @@ struct Vertex {
     Framework::Math::Vector4 pos;
     Framework::Math::Vector2 uv;
     Framework::Graphics::Color4 color;
-};
-
-struct ColorBuffer {
-    Framework::Graphics::Color4 color;
-};
-
-struct MVP {
-    Framework::Math::Matrix4x4 world;
-    Framework::Math::Matrix4x4 view;
-    Framework::Math::Matrix4x4 proj;
 };
 
 }
@@ -179,7 +170,7 @@ public:
         cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         throwIfFailed(DXInterfaceAccessor::getDevice()->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCBVHeap)));
-        UINT size = Framework::Graphics::sizeAlignment(sizeof(MVP)) * Framework::Define::Render::MAX_CONSTANT_BUFFER_USE_NUM_PER_ONE_FRAME;
+        UINT size = Framework::Graphics::sizeAlignment(sizeof(Framework::Graphics::MVPCBuffer)) * Framework::Define::Render::MAX_CONSTANT_BUFFER_USE_NUM_PER_ONE_FRAME;
         throwIfFailed(DXInterfaceAccessor::getDevice()->CreateCommittedResource(
             &createProperty(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD),
             D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
@@ -191,8 +182,8 @@ public:
         struct { char buf[256]; } *mCBVDataBegin;
         D3D12_RANGE range{ 0,0 };
         throwIfFailed(mConstantBuffer->Map(0, &range, reinterpret_cast<void**>(&mCBVDataBegin)));
-        memcpy(mCBVDataBegin, &mMVP, sizeof(MVP));
-        memcpy(mCBVDataBegin + 1, &mColorBuffer, sizeof(Color4));
+        memcpy(mCBVDataBegin, &mMVP, sizeof(Framework::Graphics::MVPCBuffer));
+        memcpy(mCBVDataBegin + 1, &mColorBuffer, sizeof(Framework::Graphics::Color4));
         mConstantBuffer->Unmap(0, nullptr);
 
         D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
@@ -265,12 +256,12 @@ protected:
             float sin = Framework::Math::MathUtil::sin(theta);
             float cos = Framework::Math::MathUtil::cos(theta);
             mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(cos, sin, 0)));
-            memcpy(mCBVDataBegin + mvpOffset, &mMVP, sizeof(MVP));
-            memcpy(mCBVDataBegin + colorOffset, &mColorBuffer, sizeof(Color4));
+            memcpy(mCBVDataBegin + mvpOffset, &mMVP, sizeof(Framework::Graphics::MVPCBuffer));
+            memcpy(mCBVDataBegin + colorOffset, &mColorBuffer, sizeof(Framework::Graphics::ColorCBuffer));
             {
                 D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
                 cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress() + 0x100 * mvpOffset;
-                cbvDesc.SizeInBytes = sizeAlignment(sizeof(MVP));
+                cbvDesc.SizeInBytes = sizeAlignment(sizeof(Framework::Graphics::MVPCBuffer));
 
                 D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
                 ptr.ptr += mvpOffset * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
@@ -279,7 +270,7 @@ protected:
             {
                 D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
                 cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress() + 0x100 * colorOffset;
-                cbvDesc.SizeInBytes = sizeAlignment(sizeof(Color4));
+                cbvDesc.SizeInBytes = sizeAlignment(sizeof(Framework::Graphics::ColorCBuffer));
 
                 D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
                 ptr.ptr += colorOffset * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
@@ -346,7 +337,7 @@ private:
     std::unique_ptr<Framework::Graphics::VertexBuffer> mVertexBuffer; //!< 頂点バッファ
     std::unique_ptr<Framework::Graphics::IndexBuffer> mIndexBuffer; //!< インデックスバッファ
     std::unique_ptr<Pipeline> mPipeline;
-    ColorBuffer mColorBuffer;
+    Framework::Graphics::ColorCBuffer mColorBuffer;
     ComPtr<ID3D12Resource> mConstantBuffer;
     ComPtr<ID3D12DescriptorHeap> mCBVHeap;
     ComPtr<ID3D12DescriptorHeap> mSRVHeap;
@@ -354,7 +345,7 @@ private:
     ComPtr<ID3D12DescriptorHeap> mImGUIDescriptorSrvHeap;
 
     float mAlphaTheta;
-    MVP mMVP;
+    Framework::Graphics::MVPCBuffer mMVP;
     float mRotate;
     bool mMode;
     UINT mNumIndices;
