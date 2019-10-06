@@ -22,6 +22,7 @@
 #include "Framework/Window/Window.h"
 #include "Framework/Window/Procedure/DestroyProc.h"
 #include "Framework/Window/Procedure/CloseProc.h"
+#include "Framework/Window/Procedure/ImguiProc.h"
 #include "Framework/Utility/IO/TextureLoader.h"
 #include "Framework/Math/Matrix4x4.h"
 #include "Framework/Graphics/DX12/Resource/VertexBuffer.h"
@@ -74,6 +75,7 @@ public:
         if (!Game::init())return false;
         using namespace Framework::Window;
         Window* window = Framework::Device::GameDevice::getInstance().getWindow();
+        window->addProcedureEvent(new ImguiProc());
         window->addProcedureEvent(new DestroyProc());
         window->addProcedureEvent(new CloseProc());
 

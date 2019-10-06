@@ -53,6 +53,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\Time.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Window\Procedure\CloseProc.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Window\Procedure\DestroyProc.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Window\Procedure\ImguiProc.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Window\Window.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Window\WindowProcedures.cpp" />
   </ItemGroup>
@@ -123,6 +124,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Typedef.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Window\Procedure\CloseProc.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Window\Procedure\DestroyProc.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Window\Procedure\ImguiProc.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Window\Procedure\IWindowProc.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Window\Window.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Window\WindowProcedures.h" />
