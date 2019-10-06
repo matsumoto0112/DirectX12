@@ -57,7 +57,7 @@ DX12Manager::DX12Manager(HWND hWnd, UINT width, UINT height) {
     //ファクトリの生成
     ComPtr<IDXGIFactory4> factory;
     throwIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory)));
-    static constexpr bool useWrapDevice = false;
+    static constexpr bool useWrapDevice = true;
     if (useWrapDevice) {
         ComPtr<IDXGIAdapter> adapter = nullptr;
         throwIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&adapter)));
