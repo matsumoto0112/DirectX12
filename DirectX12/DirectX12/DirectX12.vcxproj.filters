@@ -34,5 +34,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shader\Utility\ShaderDefine.hlsli" />
+    <None Include="Resources\Shader\Utility\UtilFunc.hlsli" />
   </ItemGroup>
 </Project>

@@ -1,9 +1,12 @@
 #pragma once
+#include <vector>
+#include <memory>
 #include <d3d12.h>
 #include "Framework/Graphics/DX12/Resource/Texture.h"
 
 namespace Framework {
 namespace Graphics {
+class ShaderResourceView;
 
 /**
 * @class SRVManager
@@ -29,7 +32,7 @@ public:
     void setResource();
 private:
     static constexpr UINT TEXTURE_RESERVATION_NUM = 10000;
-    ComPtr<ID3D12DescriptorHeap> mSRVHeap;
+    std::vector<std::unique_ptr<ShaderResourceView>> mSRVs;
 };
 
 } //Graphics 

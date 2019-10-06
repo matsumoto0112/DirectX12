@@ -1,6 +1,8 @@
 #include "Utility/ShaderDefine.hlsli"
+#include "Utility/UtilFunc.hlsli"
 
 Texture2D tex : register(t0);
+Texture2D tex2 : register(t1);
 SamplerState samplerState : register(s0);
 
 struct PSInput
@@ -10,10 +12,10 @@ struct PSInput
     float4 color : COLOR0;
 };
 
-float4 main(const PSInput input) : SV_Target
+float4 main(PSInput input) : SV_Target
 {
-    float4 o = tex.Sample(samplerState, input.uv);
-    o = o * input.color;
-    clip(o.a - EPSILON);
-    return o;
+    float4 t1 = tex.Sample(samplerState, input.uv);
+    float4 t2 = tex2.Sample(samplerState, input.uv);
+    return lerp(t1, t2, input.uv.x);
+
 }

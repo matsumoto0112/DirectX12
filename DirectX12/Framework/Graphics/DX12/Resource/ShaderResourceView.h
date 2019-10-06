@@ -21,11 +21,11 @@ public:
     */
     ~ShaderResourceView();
 
-    bool canUpdate(UINT size) const;
+    bool canUpdate() const;
     /**
     * @brief バッファの更新
     */
-    void updateBuffer(void* buf, UINT size);
+    void updateBuffer(ComPtr<ID3D12Resource> texture);
     /**
     * @brief バッファデータの更新開始
     */
@@ -40,7 +40,10 @@ public:
     void beginFrame();
 
 private:
-
+    ComPtr<ID3D12DescriptorHeap> mSRVHeap;
+    const UINT mReservationNum;
+    UINT mUsedOffset;
+    UINT mCurrentUsedNum;
 };
 
 } //Graphics 

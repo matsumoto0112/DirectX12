@@ -41,6 +41,7 @@
 #include "Framework/ImGUI/ImGUI.h"
 #include "Framework/Graphics/DX12/Material/CBStruct.h"
 #include "Framework/Graphics/DX12/Resource/ConstantBuffer.h"
+#include "Framework/Graphics/DX12/Resource/ShaderResourceView.h"
 
 namespace {
 using namespace Framework::Graphics;
@@ -137,12 +138,13 @@ public:
         mPipeline->setRasterizerState(Framework::Graphics::Rasterizer(Framework::Graphics::FillMode::Solid, Framework::Graphics::CullMode::Back));
         mPipeline->createPipelineState();
 
-        D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
-        srvHeapDesc.NumDescriptors = Framework::Define::Render::MAX_TEXTURE_USE_NUM_PER_ONE_FRAME;
-        srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        throwIfFailed(DXInterfaceAccessor::getDevice()->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSRVHeap)));
+        //D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc{};
+        //srvHeapDesc.NumDescriptors = Framework::Define::Render::MAX_TEXTURE_USE_NUM_PER_ONE_FRAME;
+        //srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        //srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        //throwIfFailed(DXInterfaceAccessor::getDevice()->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSRVHeap)));
 
+        mSRV = std::make_unique<ShaderResourceView>(10000);
         mAlphaTheta = 0.0f;
         mObjectNum = 2;
         return true;
@@ -162,7 +164,7 @@ protected:
         ImGui::End();
 
         ImGui::Begin("PARAMETER");
-        ImGui::SliderInt("NUM", &mObjectNum, 0, 10000);
+        ImGui::SliderInt("NUM", &mObjectNum, 0, 5000);
         ImGui::SliderFloat4("COLOR", (float*)&mColorBuffer.color, 0.0f, 1.0f);
         ImGui::End();
 
@@ -182,6 +184,7 @@ protected:
         Framework::Graphics::RenderingManager::getInstance().begin();
         ConstantBufferManager* cbManager = RenderingManager::getInstance().getConstantBufferManager();
         cbManager->beginFrame();
+        mSRV->beginFrame();
 
         ID3D12GraphicsCommandList* mCommandList = Framework::Graphics::RenderingManager::getInstance().getDX12Manager()->getCommandList();
 
@@ -194,31 +197,35 @@ protected:
             float theta = 360.0f * i / mObjectNum;
             float sin = Framework::Math::MathUtil::sin(theta) * RADIUS;
             float cos = Framework::Math::MathUtil::cos(theta) * RADIUS;
-            mMVP.world = Matrix4x4::transposition(Matrix4x4::createScale(Vector3(0.1f, 0.1f, 0.1f)) * Matrix4x4::createTranslate(Vector3(cos, sin, 0)));
+            mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(cos, sin, 0)));
 
             cbManager->beingCBufferUpdate();
             cbManager->updateCBuffer(mMVP);
 
             cbManager->endCBufferUpdate(mCommandList);
+            mSRV->beginCBUpdate();
+            mSRV->updateBuffer(mTexture->mTexture);
+            mSRV->updateBuffer(mTexture2->mTexture);
+            mSRV->endCBUpdate(mCommandList);
 
-            //一枚目の画像
-            D3D12_CPU_DESCRIPTOR_HANDLE cpuPtr = mSRVHeap->GetCPUDescriptorHandleForHeapStart();
-            DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture->mTexture.Get(), nullptr, cpuPtr);
+            ////一枚目の画像
+            //D3D12_CPU_DESCRIPTOR_HANDLE cpuPtr = mSRVHeap->GetCPUDescriptorHandleForHeapStart();
+            //DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture->mTexture.Get(), nullptr, cpuPtr);
 
-            //2枚目の画像
-            cpuPtr = mSRVHeap->GetCPUDescriptorHandleForHeapStart();
-            cpuPtr.ptr += 1 * DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture2->mTexture.Get(), nullptr, cpuPtr);
+            ////2枚目の画像
+            //cpuPtr = mSRVHeap->GetCPUDescriptorHandleForHeapStart();
+            //cpuPtr.ptr += 1 * DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            //DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture2->mTexture.Get(), nullptr, cpuPtr);
 
-            ID3D12DescriptorHeap* heaps[] = { mSRVHeap.Get(), };
-            mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
-            D3D12_GPU_DESCRIPTOR_HANDLE gpuPtr2 = mSRVHeap->GetGPUDescriptorHandleForHeapStart();
-            //二枚目の画像を使用するときは1枚分ずらす
-            if (i % 2 == 0) {
-                gpuPtr2.ptr += 1 * DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-            }
+            //ID3D12DescriptorHeap* heaps[] = { mSRVHeap.Get(), };
+            //mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
+            //D3D12_GPU_DESCRIPTOR_HANDLE gpuPtr2 = mSRVHeap->GetGPUDescriptorHandleForHeapStart();
+            ////二枚目の画像を使用するときは1枚分ずらす
+            //if (i % 2 == 0) {
+            //    gpuPtr2.ptr += 1 * DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            //}
 
-            mCommandList->SetGraphicsRootDescriptorTable(1, gpuPtr2);
+            //mCommandList->SetGraphicsRootDescriptorTable(1, gpuPtr2);
 
 
             mVertexBuffer->addToCommandList(mCommandList);
@@ -253,8 +260,8 @@ private:
     std::unique_ptr<Framework::Graphics::IndexBuffer> mIndexBuffer; //!< インデックスバッファ
     std::unique_ptr<Pipeline> mPipeline;
     Framework::Graphics::ColorCBuffer mColorBuffer;
-    ComPtr<ID3D12DescriptorHeap> mSRVHeap;
-
+    //ComPtr<ID3D12DescriptorHeap> mSRVHeap;
+    std::unique_ptr<ShaderResourceView> mSRV;
     ComPtr<ID3D12DescriptorHeap> mImGUIDescriptorSrvHeap;
     float mAlphaTheta;
     Framework::Graphics::MVPCBuffer mMVP;
