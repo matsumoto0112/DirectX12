@@ -15,7 +15,7 @@
 #include "Framework/Device/GameDevice.h"
 #include "Framework/Game.h"
 #include "Framework/Graphics/Color4.h"
-#include "Framework/Graphics/DX12/DX12Manager.h"
+#include "Framework/Graphics/DX12/RenderingManager.h"
 #include "Framework/Math/Vector3.h"
 #include "Framework/Math/Vector4.h"
 #include "Framework/Utility/IO/ByteReader.h"
@@ -39,7 +39,7 @@
 #include "Framework/Define/Render.h"
 #include "Framework/Utility/Time.h"
 #include "Framework/ImGUI/ImGUI.h"
-#include "Framework/Graphics/DX12/CBStruct.h"
+#include "Framework/Graphics/DX12/Material/CBStruct.h"
 #include "Framework/Graphics/DX12/Resource/ConstantBuffer.h"
 
 namespace {
@@ -78,10 +78,8 @@ public:
 
         UINT width = Framework::Define::Config::getInstance().screenWidth;
         UINT height = Framework::Define::Config::getInstance().screenHeight;
-        Framework::Graphics::DX12Manager::getInstance().initialize(window->getHWND(), width, height);
-        Framework::Graphics::DX12Manager::getInstance().executeCommand();
-        Framework::Graphics::DX12Manager::getInstance().waitForPreviousFrame();
-        ID3D12Device* mDevice = Framework::Graphics::DX12Manager::getInstance().getDevice();
+        Framework::Graphics::RenderingManager::getInstance().init(window->getHWND(), width, height);
+        ID3D12Device* mDevice = DXInterfaceAccessor::getDevice();
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -115,7 +113,7 @@ public:
         mTexture2 = std::make_unique<Framework::Graphics::Texture>((std::string)Framework::Define::Path::getInstance().texture + "bg2.png");
 
 
-        mPipeline = std::make_unique<Pipeline>(Framework::Graphics::DX12Manager::getInstance().getMainRootSignature());
+        mPipeline = std::make_unique<Pipeline>(Framework::Graphics::RenderingManager::getInstance().getDX12Manager()->getMainRootSignature());
         Framework::Utility::ShaderReader vsReader((std::string)Framework::Define::Path::getInstance().shader + "VertexShader.cso");
         std::vector<BYTE> vs = vsReader.get();
         mPipeline->setVertexShader({ vs.data(),vs.size() });
@@ -145,8 +143,8 @@ public:
         srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         throwIfFailed(DXInterfaceAccessor::getDevice()->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSRVHeap)));
 
-        mConstantBuffer = std::make_unique<ConstantBuffer>(10000);
-        mConstantBuffer2 = std::make_unique<ConstantBuffer>(10000);
+        //mConstantBuffer = std::make_unique<ConstantBuffer>(10000);
+        //mConstantBuffer2 = std::make_unique<ConstantBuffer>(10000);
         mAlphaTheta = 0.0f;
         mObjectNum = 2;
         return true;
@@ -183,8 +181,11 @@ protected:
         using Framework::Math::Vector3;
         using Framework::Math::Matrix4x4;
 
-        Framework::Graphics::DX12Manager::getInstance().drawBegin();
-        ID3D12GraphicsCommandList* mCommandList = Framework::Graphics::DX12Manager::getInstance().getCommandList();
+        Framework::Graphics::RenderingManager::getInstance().begin();
+        ConstantBufferManager* cbManager = RenderingManager::getInstance().getConstantBufferManager();
+        cbManager->beginFrame();
+
+        ID3D12GraphicsCommandList* mCommandList = Framework::Graphics::RenderingManager::getInstance().getDX12Manager()->getCommandList();
         if (mMode) {
             DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture->mTexture.Get(), nullptr, mSRVHeap->GetCPUDescriptorHandleForHeapStart());
         }
@@ -198,9 +199,7 @@ protected:
         mCommandList->SetGraphicsRootDescriptorTable(1, mSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
         for (int i = 0; i < mObjectNum; i++) {
-            //if (i == mObjectNum / 2) {
             mPipeline->addToCommandList(mCommandList);
-            //}
             int mvpOffset = i * 2;
             int colorOffset = i * 2 + 1;
             float theta = 360.0f * i / mObjectNum;
@@ -208,16 +207,15 @@ protected:
             float cos = Framework::Math::MathUtil::cos(theta);
             mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(cos, sin, 0)));
 
-            mConstantBuffer->beginCBUpdate();
+            cbManager->beingCBufferUpdate();
+            cbManager->updateCBuffer(mMVP);
 
-            mConstantBuffer->updateBuffer(mMVP);
-
-            mConstantBuffer->endCBUpdate(mCommandList);
+            cbManager->endCBufferUpdate(mCommandList);
             {
                 D3D12_CPU_DESCRIPTOR_HANDLE ptr = mSRVHeap->GetCPUDescriptorHandleForHeapStart();
                 ptr.ptr += i * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
                 if (i % 2 == 0) {
-                DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture->mTexture.Get(), nullptr, ptr);
+                    DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture->mTexture.Get(), nullptr, ptr);
                 }
                 else {
                     DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture2->mTexture.Get(), nullptr, ptr);
@@ -242,17 +240,15 @@ protected:
         ImGui::Render();
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList);
 
-        mConstantBuffer->endFrame();
-        mConstantBuffer2->endFrame();
-        Framework::Graphics::DX12Manager::getInstance().drawEnd();
+        //mConstantBuffer->beginFrame();
+        //mConstantBuffer2->beginFrame();
+        Framework::Graphics::RenderingManager::getInstance().end();
 
     }
     void finalize() override {
         ImGui_ImplDX12_Shutdown();
         ImGui_ImplWin32_Shutdown();
         ImGui::DestroyContext();
-
-        Framework::Graphics::DX12Manager::getInstance().finalize();
         Game::finalize();
     }
 
@@ -272,8 +268,8 @@ private:
     ComPtr<ID3D12DescriptorHeap> mSRVHeap;
 
     ComPtr<ID3D12DescriptorHeap> mImGUIDescriptorSrvHeap;
-    std::unique_ptr<ConstantBuffer> mConstantBuffer;
-    std::unique_ptr<ConstantBuffer> mConstantBuffer2;
+    //std::unique_ptr<ConstantBuffer> mConstantBuffer;
+    //std::unique_ptr<ConstantBuffer> mConstantBuffer2;
     float mAlphaTheta;
     Framework::Graphics::MVPCBuffer mMVP;
     float mRotate;

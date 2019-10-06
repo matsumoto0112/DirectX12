@@ -43,6 +43,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_impl_win32.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Window\Procedure\ImguiProc.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBuffer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Material\Material2D.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBufferManager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\RenderingManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Math\IntVector2.h" />
@@ -114,8 +117,11 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_impl_dx12.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_impl_win32.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Window\Procedure\ImguiProc.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Render\IMaterial.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\CBStruct.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBuffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Material\IMaterial.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Material\Material2D.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Material\CBStruct.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBufferManager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\RenderingManager.h" />
   </ItemGroup>
 </Project>

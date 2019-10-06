@@ -13,11 +13,11 @@ public:
     /**
     * @brief デストラクタ
     */
-    virtual ~IMaterial();
+    virtual ~IMaterial() = default;
     /**
     * @brief コマンドリストに追加する
     */
-    virtual void addToCommandList(ID3D12GraphicsCommandList* commandList);
+    virtual void addToCommandList(ID3D12GraphicsCommandList* commandList) = 0;
 };
 
 } //Graphics 

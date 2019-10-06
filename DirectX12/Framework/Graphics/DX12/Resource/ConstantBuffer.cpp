@@ -29,11 +29,23 @@ ConstantBuffer::~ConstantBuffer() {
     mConstantBuffer->Unmap(0, nullptr);
 }
 
+bool ConstantBuffer::canUpdate(UINT size) const {
+    size = sizeAlignment(size);
+    UINT requiredNum = size / 0xff;
+    return mAssignedNum + requiredNum <= mReservationNum;
+}
+
 void ConstantBuffer::beginCBUpdate() {
+    if (!canUpdate(1)) {
+        mUpdateFlag = false;
+        return;
+    }
+    mUpdateFlag = true;
     mOffset = mAssignedNum;
 }
 
 void ConstantBuffer::endCBUpdate(ID3D12GraphicsCommandList* commandList) {
+    if (!mUpdateFlag)return;
     ID3D12DescriptorHeap* heaps[] = { mCBVHeap.Get(), };
     commandList->SetDescriptorHeaps(_countof(heaps), heaps);
     D3D12_GPU_DESCRIPTOR_HANDLE addr = mCBVHeap->GetGPUDescriptorHandleForHeapStart();
@@ -42,6 +54,9 @@ void ConstantBuffer::endCBUpdate(ID3D12GraphicsCommandList* commandList) {
 }
 
 void ConstantBuffer::updateBuffer(void* buf, UINT size) {
+    size = sizeAlignment(size);
+    MY_ASSERTION(canUpdate(size), "コンスタントバッファの利用可能数を超えています");
+    UINT requiredNum = size / 0xff;
 
     memcpy(mCBVDataBegin + mAssignedNum, buf, size);
 
@@ -52,9 +67,11 @@ void ConstantBuffer::updateBuffer(void* buf, UINT size) {
     D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
     ptr.ptr += mAssignedNum * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
     DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr);
+
+    mAssignedNum += requiredNum;
 }
 
-void ConstantBuffer::endFrame() {
+void ConstantBuffer::beginFrame() {
     mAssignedNum = 0;
 }
 

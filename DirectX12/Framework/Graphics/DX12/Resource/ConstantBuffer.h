@@ -20,11 +20,12 @@ public:
     * @brief デストラクタ
     */
     ~ConstantBuffer();
+
+    bool canUpdate(UINT size) const;
     /**
-    * @brief バッファデータの更新
+    * @brief バッファの更新
     */
-    template <class T>
-    void updateBuffer(const T& buffer);
+    void updateBuffer(void* buf, UINT size);
     /**
     * @brief バッファデータの更新開始
     */
@@ -34,14 +35,9 @@ public:
     */
     void endCBUpdate(ID3D12GraphicsCommandList* commandList);
     /**
-    * @brief 描画フレーム終了時に呼ぶ
+    * @brief 描画フレーム開始時に呼ぶ
     */
-    void endFrame();
-private:
-    /**
-    * @brief バッファの更新
-    */
-    void updateBuffer(void* buf, UINT size);
+    void beginFrame();
 private:
     ComPtr<ID3D12Resource> mConstantBuffer; //!< バッファリソース
     ComPtr<ID3D12DescriptorHeap> mCBVHeap; //!< ヒープ
@@ -49,16 +45,8 @@ private:
     UINT mOffset; //!< バッファのメモリオフセット
     UINT mReservationNum; //!< コンスタントバッファの割り当て予約数
     struct { char buf[256]; }*mCBVDataBegin; //!< メモリの開始地点
+    bool mUpdateFlag;
 };
-
-template<class T>
-inline void ConstantBuffer::updateBuffer(const T& buffer) {
-    UINT requiredSize = sizeAlignment(sizeof(buffer));
-    UINT requiredNum = requiredSize / 0xff;
-    MY_ASSERTION(mAssignedNum + requiredNum <= mReservationNum, "コンスタントバッファの利用可能数を超えています");
-    updateBuffer((void*)&buffer, requiredSize);
-    mAssignedNum += requiredNum;
-}
 
 } //Graphics 
 } //Framework 

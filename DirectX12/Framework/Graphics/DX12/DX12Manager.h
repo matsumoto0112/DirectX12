@@ -1,8 +1,6 @@
 #pragma once
 #include <d3d12.h>
 #include <dxgi1_4.h>
-
-#include "Framework/Utility/Singleton.h"
 #include "Framework/Utility/Typedef.h"
 #include "Framework/Graphics/DX12/Render/RootSignature.h"
 #include "Framework/Graphics/DX12/Render/Pipeline.h"
@@ -14,27 +12,23 @@ namespace Graphics {
 * @class DX12Manager
 * @brief DirectX12管理クラス
 */
-class DX12Manager :public Utility::Singleton<DX12Manager> {
+class DX12Manager {
 public:
     /**
     * @brief コンストラクタ
+    * @param hWnd ウィンドウハンドル
+    * @param width ウィンドウの幅
+    * @param height ウィンドウの高さ
     */
-    DX12Manager();
+    DX12Manager(HWND hWnd, UINT width, UINT height);
     /**
     * @brief デストラクタ
     */
     ~DX12Manager();
     /**
-    * @brief 初期化
-    * @param hWnd ウィンドウハンドル
-    * @param width ウィンドウの幅
-    * @param height ウィンドウの高さ
+    * @brief デフォルトのパイプライン作成
     */
-    void initialize(HWND hWnd, UINT width, UINT height);
-    /**
-    * @brief 終了処理
-    */
-    void finalize();
+    void createPipeline();
     /**
     * @brief デバイスを取得する
     */
@@ -64,7 +58,7 @@ public:
     * @brief メインとなるルートシグネチャの取得
     */
     std::shared_ptr<RootSignature> getMainRootSignature() const { return mRootSignature; }
-    //private:
+private:
     static constexpr UINT FRAME_COUNT = 2;
     ComPtr<ID3D12Device> mDevice; //!< デバイス
     ComPtr<ID3D12CommandQueue> mCommandQueue; //!< コマンドキュー
@@ -80,9 +74,7 @@ public:
     UINT mRTVDescriptorSize; //!< RTVディスクリプタヒープの大きさ
     D3D12_VIEWPORT mViewport;
     D3D12_RECT mScissorRect;
-    //ComPtr<ID3D12RootSignature> mRootSignature; //!< ルートシグネチャ
     std::unique_ptr<Pipeline> mDefaultPipeline;
-    //ComPtr<ID3D12PipelineState> mPipelineState; //!< パイプラインステート
     std::shared_ptr<RootSignature> mRootSignature;
 };
 
