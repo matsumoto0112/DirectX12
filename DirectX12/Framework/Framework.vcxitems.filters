@@ -127,5 +127,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\RenderingManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\SRVManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ShaderResourceView.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\FBXLoader.h" />
   </ItemGroup>
 </Project>
