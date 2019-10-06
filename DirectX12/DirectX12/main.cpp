@@ -100,32 +100,6 @@ public:
             mImGUIDescriptorSrvHeap->GetCPUDescriptorHandleForHeapStart(),
             mImGUIDescriptorSrvHeap->GetGPUDescriptorHandleForHeapStart());
 
-        //std::vector<Vertex> vertices
-        //{
-        //    {{-0.5f,   0.5f,  -0.5f,  1.0f} ,Framework::Graphics::Color4(1.0f,0.0f,0.0f,1.0f)},
-        //    {{0.5f,    0.5f,  -0.5f,  1.0f} ,Framework::Graphics::Color4(0.0f,1.0f,0.0f,1.0f)},
-        //    {{0.5f,    -0.5f,  -0.5f,  1.0f},Framework::Graphics::Color4(0.0f,0.0f,1.0f,1.0f) },
-        //    {{-0.5f,   -0.5f,  -0.5f,  1.0f} ,Framework::Graphics::Color4(0.0f,1.0f,1.0f,1.0f)},
-        //    {{-0.5f,    0.5f,   0.5f,  1.0f} ,Framework::Graphics::Color4(1.0f,1.0f,0.0f,1.0f)},
-        //    {{0.5f,     0.5f,   0.5f,  1.0f} ,Framework::Graphics::Color4(1.0f,0.0f,1.0f,1.0f)},
-        //    {{0.5f,    -0.5f,   0.5f,  1.0f},Framework::Graphics::Color4(1.0f,1.0f,1.0f,1.0f) },
-        //    {{-0.5f,   -0.5f,   0.5f,  1.0f},Framework::Graphics::Color4(0.0f,0.0f,0.0f,1.0f) },
-        //};
-        //std::vector<UINT> indices
-        //{
-        //    0,1,2,
-        //    0,2,3,
-        //    4,0,3,
-        //    4,3,7,
-        //    5,4,7,
-        //    5,7,6,
-        //    1,5,6,
-        //    1,6,2,
-        //    3,2,6,
-        //    3,6,7,
-        //    4,5,1,
-        //    4,1,0,
-        //};
         std::vector<Vertex> vertices{
             {{-0.5f,0.5f,0.0f,1.0f},{0.0f,0.0f},Framework::Graphics::Color4::WHITE },
             {{0.5f,0.5f,0.0f,1.0f},{1.0f,0.0f},Framework::Graphics::Color4::WHITE },
@@ -154,7 +128,7 @@ public:
         bd.AlphaToCoverageEnable = FALSE;
         bd.IndependentBlendEnable = FALSE;
         for (int i = 0; i < 8; i++) {
-            bd.RenderTarget[i] = Framework::Graphics::BlendState::alignmentBlendDesc();
+            bd.RenderTarget[i] = Framework::Graphics::BlendState::addBlendDesc();
         }
 
         mPipeline->setRenderTarget({ DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM });
@@ -224,9 +198,9 @@ protected:
         mCommandList->SetGraphicsRootDescriptorTable(1, mSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
         for (int i = 0; i < mObjectNum; i++) {
-            if (i == mObjectNum / 2) {
-                mPipeline->addToCommandList(mCommandList);
-            }
+            //if (i == mObjectNum / 2) {
+            mPipeline->addToCommandList(mCommandList);
+            //}
             int mvpOffset = i * 2;
             int colorOffset = i * 2 + 1;
             float theta = 360.0f * i / mObjectNum;
@@ -234,32 +208,20 @@ protected:
             float cos = Framework::Math::MathUtil::cos(theta);
             mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(cos, sin, 0)));
 
-            if (i % 2 == 0) {
-                mConstantBuffer->beginCBUpdate();
+            mConstantBuffer->beginCBUpdate();
 
-                mConstantBuffer->updateBuffer(mMVP);
-                mConstantBuffer->updateBuffer(mColorBuffer);
+            mConstantBuffer->updateBuffer(mMVP);
 
-                mConstantBuffer->endCBUpdate(mCommandList);
-            }
-            else {
-                mConstantBuffer2->beginCBUpdate();
-
-                mConstantBuffer2->updateBuffer(mMVP);
-                mConstantBuffer2->updateBuffer(mColorBuffer);
-
-                mConstantBuffer2->endCBUpdate(mCommandList);
-            }
-
+            mConstantBuffer->endCBUpdate(mCommandList);
             {
                 D3D12_CPU_DESCRIPTOR_HANDLE ptr = mSRVHeap->GetCPUDescriptorHandleForHeapStart();
                 ptr.ptr += i * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-                //if (i % 2 == 0) {
+                if (i % 2 == 0) {
                 DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture->mTexture.Get(), nullptr, ptr);
-                //}
-                //else {
-                    //DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture2->mTexture.Get(), nullptr, ptr);
-                //}
+                }
+                else {
+                    DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture2->mTexture.Get(), nullptr, ptr);
+                }
                 ID3D12DescriptorHeap* heaps2[] = { mSRVHeap.Get(), };
                 mCommandList->SetDescriptorHeaps(_countof(heaps2), heaps2);
             }
