@@ -60,7 +60,11 @@ public:
     * @brief フレーム経過まで待機する
     */
     void waitForPreviousFrame();
-//private:
+    /**
+    * @brief メインとなるルートシグネチャの取得
+    */
+    std::shared_ptr<RootSignature> getMainRootSignature() const { return mRootSignature; }
+    //private:
     static constexpr UINT FRAME_COUNT = 2;
     ComPtr<ID3D12Device> mDevice; //!< デバイス
     ComPtr<ID3D12CommandQueue> mCommandQueue; //!< コマンドキュー

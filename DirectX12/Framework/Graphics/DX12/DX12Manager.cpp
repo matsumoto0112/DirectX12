@@ -93,7 +93,7 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
     swapChainDesc.BufferCount = FRAME_COUNT;
     swapChainDesc.Width = width;
     swapChainDesc.Height = height;
-    swapChainDesc.Format = DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM;
+    swapChainDesc.Format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
     swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG::DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -172,7 +172,7 @@ void DX12Manager::initialize(HWND hWnd, UINT width, UINT height) {
         mDefaultPipeline->setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE::D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
         mDefaultPipeline->setSampleDesc({ 1,0 });
         mDefaultPipeline->setSampleMask(UINT_MAX);
-        mDefaultPipeline->setRenderTarget({ DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM });
+        mDefaultPipeline->setRenderTarget({ DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM });
         mDefaultPipeline->createPipelineState();
 
         throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator.Get(), mDefaultPipeline->getPipelineState(), IID_PPV_ARGS(&mCommandList)));

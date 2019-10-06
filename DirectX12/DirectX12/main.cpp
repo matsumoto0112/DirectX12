@@ -25,6 +25,8 @@
 #include "Framework/Window/Procedure/ImguiProc.h"
 #include "Framework/Utility/IO/TextureLoader.h"
 #include "Framework/Math/Matrix4x4.h"
+#include "Framework/Graphics/DX12/Desc/BlendState.h"
+#include "Framework/Graphics/DX12/Desc/Rasterizer.h"
 #include "Framework/Graphics/DX12/Resource/VertexBuffer.h"
 #include "Framework/Graphics/DX12/Resource/IndexBuffer.h"
 #include "Framework/Graphics/DX12/Resource/ConstantBuffer.h"
@@ -35,6 +37,7 @@
 #include "Framework/Graphics/DX12/Desc/Sampler.h"
 #include "Framework/Utility/IO/ShaderReader.h"
 #include "Framework/Define/Render.h"
+#include "Framework/Utility/Time.h"
 #include "Framework/ImGUI/ImGUI.h"
 
 namespace {
@@ -101,7 +104,7 @@ public:
         if (mDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&mImGUIDescriptorSrvHeap)) != S_OK)
             return false;
 
-        ImGui_ImplDX12_Init(mDevice, 2, DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM,
+        ImGui_ImplDX12_Init(mDevice, 2, DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM,
             mImGUIDescriptorSrvHeap->GetCPUDescriptorHandleForHeapStart(),
             mImGUIDescriptorSrvHeap->GetGPUDescriptorHandleForHeapStart());
 
@@ -145,28 +148,33 @@ public:
         mTexture = std::make_unique<Framework::Graphics::Texture>((std::string)Framework::Define::Path::getInstance().texture + "bg.png");
         mTexture2 = std::make_unique<Framework::Graphics::Texture>((std::string)Framework::Define::Path::getInstance().texture + "bg2.png");
 
-        //mColorConstantBuffer = std::make_unique<Framework::Graphics::ConstantBuffer>(mColorBuffer);
-        //mMVPConstantBuffer = std::make_unique<Framework::Graphics::ConstantBuffer>(mMVP);
 
-        //mRootSignature = std::make_shared<Framework::Graphics::RootSignature>();
-        //mRootSignature->addConstantBufferParameter(Framework::Graphics::VisibilityType::All, 0);
-        //mRootSignature->addConstantBufferParameter(Framework::Graphics::VisibilityType::All, 1);
-        //mRootSignature->addConstantBufferParameter(Framework::Graphics::VisibilityType::All, 2);
-        //mRootSignature->addTextureParameter(Framework::Graphics::VisibilityType::All, 0);
-        //mRootSignature->addStaticSamplerParameter(Framework::Graphics::Sampler::createStaticSampler(Framework::Graphics::FilterMode::Linear, Framework::Graphics::AddressMode::Wrap, Framework::Graphics::VisibilityType::Pixel, 0));
-        //mRootSignature->createDX12RootSignature();
+        mPipeline = std::make_unique<Pipeline>(Framework::Graphics::DX12Manager::getInstance().getMainRootSignature());
+        Framework::Utility::ShaderReader vsReader((std::string)Framework::Define::Path::getInstance().shader + "VertexShader.cso");
+        std::vector<BYTE> vs = vsReader.get();
+        mPipeline->setVertexShader({ vs.data(),vs.size() });
+        Framework::Utility::ShaderReader psReader((std::string)Framework::Define::Path::getInstance().shader + "PixelShader2.cso");
+        std::vector<BYTE> ps = psReader.get();
+        mPipeline->setPixelShader({ ps.data(),ps.size() });
+        std::vector<D3D12_INPUT_ELEMENT_DESC> elem = vsReader.getShaderReflection();
+        mPipeline->setInputLayout({ elem.data(),(UINT)elem.size() });
+        D3D12_BLEND_DESC bd{};
+        bd.AlphaToCoverageEnable = FALSE;
+        bd.IndependentBlendEnable = FALSE;
+        for (int i = 0; i < 8; i++) {
+            bd.RenderTarget[i] = Framework::Graphics::BlendState::alignmentBlendDesc();
+        }
 
-        //mPipeline = std::make_unique<Framework::Graphics::Pipeline>(mRootSignature);
-        //Framework::Utility::ShaderReader vsReader((std::string)Framework::Define::Path::getInstance().shader + "2D/Texture2D_VS.cso");
-        //mPipeline->setVertexShader({ vsReader.get().data(),vsReader.get().size() });
-        //mPipeline->setInputLayout({ vsReader.getShaderReflection().data(),(UINT)vsReader.getShaderReflection().size() });
-        //Framework::Utility::ShaderReader psReader((std::string)Framework::Define::Path::getInstance().shader + "2D/Texture2D_PS.cso");
-        //mPipeline->setPixelShader({ psReader.get().data(),psReader.get().size() });
-        //mPipeline->setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE::D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
-
+        mPipeline->setRenderTarget({ DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM });
+        mPipeline->setSampleDesc({ 1,0 });
+        mPipeline->setSampleMask(UINT_MAX);
+        mPipeline->setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE::D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
+        mPipeline->setBlendState(bd);
+        mPipeline->setRasterizerState(Framework::Graphics::Rasterizer(Framework::Graphics::FillMode::Solid, Framework::Graphics::CullMode::Back));
+        mPipeline->createPipelineState();
 
         //CBV
-        D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc{};
+        D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc{ };
         cbvHeapDesc.NumDescriptors = Framework::Define::Render::MAX_CONSTANT_BUFFER_USE_NUM_PER_ONE_FRAME;
         cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -194,6 +202,7 @@ public:
         throwIfFailed(DXInterfaceAccessor::getDevice()->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSRVHeap)));
 
         mAlphaTheta = 0.0f;
+        mObjectNum = 2;
         return true;
     }
 protected:
@@ -206,11 +215,13 @@ protected:
         ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("HELLO WORLD!");
-        ImGui::Text("TEXT");
-        static float f = 0.0f;
-        ImGui::SliderFloat("R", &f, 0.0f, 1.0f);
-        mColorBuffer.color.r = f;
+        ImGui::Begin("FPS");
+        ImGui::Text("FPS %.3f", (float)Framework::Utility::Time::getInstance().currentFPS);
+        ImGui::End();
+
+        ImGui::Begin("PARAMETER");
+        ImGui::SliderInt("NUM", &mObjectNum, 0, 10000);
+        ImGui::SliderFloat4("COLOR", (float*)&mColorBuffer.color, 0.0f, 1.0f);
         ImGui::End();
 
         mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(0, 0, 0)));
@@ -235,79 +246,75 @@ protected:
             DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture2->mTexture.Get(), nullptr, mSRVHeap->GetCPUDescriptorHandleForHeapStart());
         }
 
-        struct { char buf[256]; } *mCBVDataBegin;
-        D3D12_RANGE range{ 0,0 };
-        throwIfFailed(mConstantBuffer->Map(0, &range, reinterpret_cast<void**>(&mCBVDataBegin)));
-        memcpy(mCBVDataBegin, &mMVP, sizeof(MVP));
-        memcpy(mCBVDataBegin + 1, &mColorBuffer, sizeof(Color4));
-        mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(1.0f, 0, 0)));
-        memcpy(mCBVDataBegin + 2, &mMVP, sizeof(MVP));
-        memcpy(mCBVDataBegin + 3, &mColorBuffer, sizeof(Color4));
-        {
-            D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
-            cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress();
-            cbvDesc.SizeInBytes = sizeAlignment(sizeof(MVP));
-
-            D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
-            ptr.ptr += 0 * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-            DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr);
-        }
-        {
-            D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
-            cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress() + 0x100 * 1;
-            cbvDesc.SizeInBytes = sizeAlignment(sizeof(Color4));
-
-            D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
-            ptr.ptr += 1 * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-            DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr);
-        }
-        ID3D12DescriptorHeap* heaps[] = { mCBVHeap.Get(), };
-        mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
-
-        mCommandList->SetGraphicsRootDescriptorTable(0, mCBVHeap->GetGPUDescriptorHandleForHeapStart());
-
         ID3D12DescriptorHeap* heaps2[] = { mSRVHeap.Get(), };
         mCommandList->SetDescriptorHeaps(_countof(heaps2), heaps2);
 
         mCommandList->SetGraphicsRootDescriptorTable(1, mSRVHeap->GetGPUDescriptorHandleForHeapStart());
 
-        mVertexBuffer->addToCommandList(mCommandList);
-        mIndexBuffer->addToCommandList(mCommandList);
-        mIndexBuffer->drawCall(mCommandList);
+        struct { char buf[256]; } *mCBVDataBegin;
+        D3D12_RANGE range{ 0,0 };
+        throwIfFailed(mConstantBuffer->Map(0, &range, reinterpret_cast<void**>(&mCBVDataBegin)));
+
+        for (int i = 0; i < mObjectNum; i++) {
+            if (i == mObjectNum / 2) {
+                mPipeline->addToCommandList(mCommandList);
+            }
+            int mvpOffset = i * 2;
+            int colorOffset = i * 2 + 1;
+            float theta = 360.0f * i / mObjectNum;
+            float sin = Framework::Math::MathUtil::sin(theta);
+            float cos = Framework::Math::MathUtil::cos(theta);
+            mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(cos, sin, 0)));
+            memcpy(mCBVDataBegin + mvpOffset, &mMVP, sizeof(MVP));
+            memcpy(mCBVDataBegin + colorOffset, &mColorBuffer, sizeof(Color4));
+            {
+                D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
+                cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress() + 0x100 * mvpOffset;
+                cbvDesc.SizeInBytes = sizeAlignment(sizeof(MVP));
+
+                D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
+                ptr.ptr += mvpOffset * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+                DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr);
+            }
+            {
+                D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
+                cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress() + 0x100 * colorOffset;
+                cbvDesc.SizeInBytes = sizeAlignment(sizeof(Color4));
+
+                D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
+                ptr.ptr += colorOffset * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+                DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr);
+            }
+
+            ID3D12DescriptorHeap* heaps[] = { mCBVHeap.Get(), };
+            mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
+            D3D12_GPU_DESCRIPTOR_HANDLE addr = mCBVHeap->GetGPUDescriptorHandleForHeapStart();
+            addr.ptr += mvpOffset * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+            mCommandList->SetGraphicsRootDescriptorTable(0, addr);
+
+            {
+                D3D12_CPU_DESCRIPTOR_HANDLE ptr = mSRVHeap->GetCPUDescriptorHandleForHeapStart();
+                ptr.ptr += i * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+                //if (i % 2 == 0) {
+                    DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture->mTexture.Get(), nullptr, ptr);
+                //}
+                //else {
+                    //DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture2->mTexture.Get(), nullptr, ptr);
+                //}
+                ID3D12DescriptorHeap* heaps2[] = { mSRVHeap.Get(), };
+                mCommandList->SetDescriptorHeaps(_countof(heaps2), heaps2);
+            }
+            {
+                D3D12_GPU_DESCRIPTOR_HANDLE ptr = mSRVHeap->GetGPUDescriptorHandleForHeapStart();
+                ptr.ptr += i * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
+                mCommandList->SetGraphicsRootDescriptorTable(1, ptr);
+            }
 
 
-
-        {
-            D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
-            cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress() + 0x100 * 2;
-            cbvDesc.SizeInBytes = sizeAlignment(sizeof(MVP));
-
-            D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
-            ptr.ptr += 2 * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-            DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr);
+            mVertexBuffer->addToCommandList(mCommandList);
+            mIndexBuffer->addToCommandList(mCommandList);
+            mIndexBuffer->drawCall(mCommandList);
         }
-
-        {
-            D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc{};
-            cbvDesc.BufferLocation = mConstantBuffer->GetGPUVirtualAddress() + 0x100 * 3;
-            cbvDesc.SizeInBytes = sizeAlignment(sizeof(Color4));
-
-            D3D12_CPU_DESCRIPTOR_HANDLE ptr = mCBVHeap->GetCPUDescriptorHandleForHeapStart();
-            ptr.ptr += 3 * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-            DXInterfaceAccessor::getDevice()->CreateConstantBufferView(&cbvDesc, ptr);
-        }
-
-
-
-        ID3D12DescriptorHeap* heap3[] = { mCBVHeap.Get() };
-        mCommandList->SetDescriptorHeaps(_countof(heap3), heap3);
-        D3D12_GPU_DESCRIPTOR_HANDLE addr = mCBVHeap->GetGPUDescriptorHandleForHeapStart();
-        addr.ptr += 2 * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-        mCommandList->SetGraphicsRootDescriptorTable(0, addr);
-
-        mVertexBuffer->addToCommandList(mCommandList);
-        mIndexBuffer->addToCommandList(mCommandList);
-        mIndexBuffer->drawCall(mCommandList);
 
         mConstantBuffer->Unmap(0, nullptr);
 
@@ -336,13 +343,9 @@ private:
     std::unique_ptr<Framework::Graphics::Texture> mTexture; //!< テクスチャ
     std::unique_ptr<Framework::Graphics::Texture> mTexture2; //!< テクスチャ
 
-    //std::unique_ptr<Framework::Graphics::Pipeline> mPipeline;
-    //std::shared_ptr<Framework::Graphics::RootSignature> mRootSignature;
-
     std::unique_ptr<Framework::Graphics::VertexBuffer> mVertexBuffer; //!< 頂点バッファ
     std::unique_ptr<Framework::Graphics::IndexBuffer> mIndexBuffer; //!< インデックスバッファ
-    //std::unique_ptr<Framework::Graphics::ConstantBuffer> mColorConstantBuffer; //!< コンスタントバッファ
-    //std::unique_ptr<Framework::Graphics::ConstantBuffer> mMVPConstantBuffer; //!< コンスタントバッファ
+    std::unique_ptr<Pipeline> mPipeline;
     ColorBuffer mColorBuffer;
     ComPtr<ID3D12Resource> mConstantBuffer;
     ComPtr<ID3D12DescriptorHeap> mCBVHeap;
@@ -355,6 +358,7 @@ private:
     float mRotate;
     bool mMode;
     UINT mNumIndices;
+    int mObjectNum;
 };
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPTSTR, _In_ int) {
