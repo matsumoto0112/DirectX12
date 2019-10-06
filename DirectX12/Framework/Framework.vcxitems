@@ -27,6 +27,11 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\VertexBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXInterfaceAccessor.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_draw.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_impl_dx12.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_impl_win32.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_widgets.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Input\InputManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Input\Joystick.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Input\Keyboard.cpp" />
@@ -72,6 +77,15 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Helper.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DXInterfaceAccessor.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\VisibilityType.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\ImGUI.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imconfig.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_impl_dx12.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_impl_win32.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_internal.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imstb_rectpack.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imstb_textedit.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imstb_truetype.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Input\ButtonID.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Input\ControllerUtil.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Input\ID.h" />

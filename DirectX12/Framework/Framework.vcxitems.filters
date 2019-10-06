@@ -37,6 +37,11 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\ShaderReader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Render\RootSignature.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Render\Pipeline.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_draw.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_widgets.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_impl_dx12.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_impl_win32.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Math\IntVector2.h" />
@@ -99,5 +104,14 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Desc\Rasterizer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Desc\BlendState.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Define\Render.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imconfig.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_internal.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imstb_textedit.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\ImGUI.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imstb_rectpack.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imstb_truetype.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_impl_dx12.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)ImGUI\Include\imgui_impl_win32.h" />
   </ItemGroup>
 </Project>

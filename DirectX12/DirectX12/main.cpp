@@ -34,6 +34,7 @@
 #include "Framework/Graphics/DX12/Desc/Sampler.h"
 #include "Framework/Utility/IO/ShaderReader.h"
 #include "Framework/Define/Render.h"
+#include "Framework/ImGUI/ImGUI.h"
 
 namespace {
 using namespace Framework::Graphics;
@@ -84,6 +85,23 @@ public:
         Framework::Graphics::DX12Manager::getInstance().executeCommand();
         Framework::Graphics::DX12Manager::getInstance().waitForPreviousFrame();
         ID3D12Device* mDevice = Framework::Graphics::DX12Manager::getInstance().getDevice();
+
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        ImGui::StyleColorsDark();
+        ImGui_ImplWin32_Init(window->getHWND());
+
+        D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+        desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        desc.NumDescriptors = 1;
+        desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        if (mDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&mImGUIDescriptorSrvHeap)) != S_OK)
+            return false;
+
+        ImGui_ImplDX12_Init(mDevice, 2, DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM,
+            mImGUIDescriptorSrvHeap->GetCPUDescriptorHandleForHeapStart(),
+            mImGUIDescriptorSrvHeap->GetGPUDescriptorHandleForHeapStart());
 
         //std::vector<Vertex> vertices
         //{
@@ -181,12 +199,19 @@ protected:
         using Framework::Math::Vector3;
         using Framework::Math::Matrix4x4;
         Game::update();
-        mAlphaTheta += 1.0f;
-        mColorBuffer.color.r = (Framework::Math::MathUtil::cos(mAlphaTheta) + 1.0f) * 0.5f;
-        mColorBuffer.color.g = (Framework::Math::MathUtil::cos(mAlphaTheta * 2) + 1.0f) * 0.5f;
-        mColorBuffer.color.b = (Framework::Math::MathUtil::cos(mAlphaTheta * 7) + 1.0f) * 0.5f;
 
-        mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(0, mAlphaTheta * 0.01f, 0)));
+        ImGui_ImplDX12_NewFrame();
+        ImGui_ImplWin32_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::Begin("HELLO WORLD!");
+        ImGui::Text("TEXT");
+        static float f = 0.0f;
+        ImGui::SliderFloat("R", &f, 0.0f, 1.0f);
+        mColorBuffer.color.r = f;
+        ImGui::End();
+
+        mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(0, 0, 0)));
         mMVP.view = Matrix4x4::transposition(Matrix4x4::createView({ Vector3(0,0,-10),Vector3(0,0,0),Vector3(0,1,0) }));
         float ratio = static_cast<float>(Framework::Define::Config::getInstance().screenWidth) / static_cast<float>(Framework::Define::Config::getInstance().screenHeight);
         mMVP.proj = Matrix4x4::transposition(Matrix4x4::createProjection({ 45.0f,ratio,0.1f,1000.0f }));
@@ -283,10 +308,19 @@ protected:
         mIndexBuffer->drawCall(mCommandList);
 
         mConstantBuffer->Unmap(0, nullptr);
+
+        mCommandList->SetDescriptorHeaps(1, mImGUIDescriptorSrvHeap.GetAddressOf());
+        ImGui::Render();
+        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList);
+
         Framework::Graphics::DX12Manager::getInstance().drawEnd();
 
     }
     void finalize() override {
+        ImGui_ImplDX12_Shutdown();
+        ImGui_ImplWin32_Shutdown();
+        ImGui::DestroyContext();
+
         Framework::Graphics::DX12Manager::getInstance().finalize();
         Game::finalize();
     }
@@ -311,6 +345,8 @@ private:
     ComPtr<ID3D12Resource> mConstantBuffer;
     ComPtr<ID3D12DescriptorHeap> mCBVHeap;
     ComPtr<ID3D12DescriptorHeap> mSRVHeap;
+
+    ComPtr<ID3D12DescriptorHeap> mImGUIDescriptorSrvHeap;
 
     float mAlphaTheta;
     MVP mMVP;
