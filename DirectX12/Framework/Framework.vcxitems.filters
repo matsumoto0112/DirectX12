@@ -46,6 +46,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Material\Material2D.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBufferManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\RenderingManager.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\SRVManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Math\IntVector2.h" />
@@ -123,5 +124,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Material\CBStruct.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBufferManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\RenderingManager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\SRVManager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ShaderResourceView.h" />
   </ItemGroup>
 </Project>

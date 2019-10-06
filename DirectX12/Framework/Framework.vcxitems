@@ -26,6 +26,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBufferManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\IndexBuffer.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\SRVManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\Texture.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\VertexBuffer.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.cpp" />
@@ -80,6 +81,8 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBuffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ConstantBufferManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\IndexBuffer.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ShaderResourceView.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\SRVManager.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\Texture.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\VertexBuffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\DX12Manager.h" />

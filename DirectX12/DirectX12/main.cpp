@@ -143,8 +143,6 @@ public:
         srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         throwIfFailed(DXInterfaceAccessor::getDevice()->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&mSRVHeap)));
 
-        //mConstantBuffer = std::make_unique<ConstantBuffer>(10000);
-        //mConstantBuffer2 = std::make_unique<ConstantBuffer>(10000);
         mAlphaTheta = 0.0f;
         mObjectNum = 2;
         return true;
@@ -186,48 +184,41 @@ protected:
         cbManager->beginFrame();
 
         ID3D12GraphicsCommandList* mCommandList = Framework::Graphics::RenderingManager::getInstance().getDX12Manager()->getCommandList();
-        if (mMode) {
-            DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture->mTexture.Get(), nullptr, mSRVHeap->GetCPUDescriptorHandleForHeapStart());
-        }
-        else {
-            DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture2->mTexture.Get(), nullptr, mSRVHeap->GetCPUDescriptorHandleForHeapStart());
-        }
 
-        ID3D12DescriptorHeap* heaps2[] = { mSRVHeap.Get(), };
-        mCommandList->SetDescriptorHeaps(_countof(heaps2), heaps2);
-
-        mCommandList->SetGraphicsRootDescriptorTable(1, mSRVHeap->GetGPUDescriptorHandleForHeapStart());
+        constexpr float RADIUS = 1.0f;
 
         for (int i = 0; i < mObjectNum; i++) {
             mPipeline->addToCommandList(mCommandList);
             int mvpOffset = i * 2;
             int colorOffset = i * 2 + 1;
             float theta = 360.0f * i / mObjectNum;
-            float sin = Framework::Math::MathUtil::sin(theta);
-            float cos = Framework::Math::MathUtil::cos(theta);
-            mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(cos, sin, 0)));
+            float sin = Framework::Math::MathUtil::sin(theta) * RADIUS;
+            float cos = Framework::Math::MathUtil::cos(theta) * RADIUS;
+            mMVP.world = Matrix4x4::transposition(Matrix4x4::createScale(Vector3(0.1f, 0.1f, 0.1f)) * Matrix4x4::createTranslate(Vector3(cos, sin, 0)));
 
             cbManager->beingCBufferUpdate();
             cbManager->updateCBuffer(mMVP);
 
             cbManager->endCBufferUpdate(mCommandList);
-            {
-                D3D12_CPU_DESCRIPTOR_HANDLE ptr = mSRVHeap->GetCPUDescriptorHandleForHeapStart();
-                ptr.ptr += i * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-                if (i % 2 == 0) {
-                    DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture->mTexture.Get(), nullptr, ptr);
-                }
-                else {
-                    DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture2->mTexture.Get(), nullptr, ptr);
-                }
-                ID3D12DescriptorHeap* heaps2[] = { mSRVHeap.Get(), };
-                mCommandList->SetDescriptorHeaps(_countof(heaps2), heaps2);
+
+            //ˆê–‡–Ú‚Ì‰æ‘œ
+            D3D12_CPU_DESCRIPTOR_HANDLE cpuPtr = mSRVHeap->GetCPUDescriptorHandleForHeapStart();
+            DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture->mTexture.Get(), nullptr, cpuPtr);
+
+            //2–‡–Ú‚Ì‰æ‘œ
+            cpuPtr = mSRVHeap->GetCPUDescriptorHandleForHeapStart();
+            cpuPtr.ptr += 1 * DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+            DXInterfaceAccessor::getDevice()->CreateShaderResourceView(mTexture2->mTexture.Get(), nullptr, cpuPtr);
+
+            ID3D12DescriptorHeap* heaps[] = { mSRVHeap.Get(), };
+            mCommandList->SetDescriptorHeaps(_countof(heaps), heaps);
+            D3D12_GPU_DESCRIPTOR_HANDLE gpuPtr2 = mSRVHeap->GetGPUDescriptorHandleForHeapStart();
+            //“ñ–‡–Ú‚Ì‰æ‘œ‚ðŽg—p‚·‚é‚Æ‚«‚Í1–‡•ª‚¸‚ç‚·
+            if (i % 2 == 0) {
+                gpuPtr2.ptr += 1 * DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
             }
-            {
-                D3D12_GPU_DESCRIPTOR_HANDLE ptr = mSRVHeap->GetGPUDescriptorHandleForHeapStart();
-                ptr.ptr += i * (DXInterfaceAccessor::getDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV));
-                mCommandList->SetGraphicsRootDescriptorTable(1, ptr);
-            }
+
+            mCommandList->SetGraphicsRootDescriptorTable(1, gpuPtr2);
 
 
             mVertexBuffer->addToCommandList(mCommandList);
@@ -239,9 +230,6 @@ protected:
         mCommandList->SetDescriptorHeaps(1, mImGUIDescriptorSrvHeap.GetAddressOf());
         ImGui::Render();
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList);
-
-        //mConstantBuffer->beginFrame();
-        //mConstantBuffer2->beginFrame();
         Framework::Graphics::RenderingManager::getInstance().end();
 
     }
@@ -268,8 +256,6 @@ private:
     ComPtr<ID3D12DescriptorHeap> mSRVHeap;
 
     ComPtr<ID3D12DescriptorHeap> mImGUIDescriptorSrvHeap;
-    //std::unique_ptr<ConstantBuffer> mConstantBuffer;
-    //std::unique_ptr<ConstantBuffer> mConstantBuffer2;
     float mAlphaTheta;
     Framework::Graphics::MVPCBuffer mMVP;
     float mRotate;

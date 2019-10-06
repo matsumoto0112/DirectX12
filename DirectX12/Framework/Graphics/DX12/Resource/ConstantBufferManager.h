@@ -41,7 +41,7 @@ private:
     */
     void addConstantBuffer();
 private:
-    static constexpr UINT CONSTANT_BUFFER_RESERVATION_NUM = 100; //!< コンスタントバッファのメモリ予約数
+    static constexpr UINT CONSTANT_BUFFER_RESERVATION_NUM = 10000; //!< コンスタントバッファのメモリ予約数
     std::vector<std::unique_ptr<ConstantBuffer>> mConstantBuffers; //!< コンスタントバッファ
     UINT mCurrentIndex; //!< 現在のコンスタントバッファインデックス
     std::vector<UINT> mBeginedIndex;

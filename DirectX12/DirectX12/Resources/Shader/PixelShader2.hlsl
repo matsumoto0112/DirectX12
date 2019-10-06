@@ -14,8 +14,6 @@ float4 main(const PSInput input) : SV_Target
 {
     float4 o = tex.Sample(samplerState, input.uv);
     o = o * input.color;
-    //o.rgb = 1.0f - o.rgb;
-    o.a = 0.1f;
     clip(o.a - EPSILON);
     return o;
 }
