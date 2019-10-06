@@ -2,6 +2,7 @@
 #include "Framework/Utility/Singleton.h"
 #include "Framework/Graphics/DX12/DX12Manager.h"
 #include "Framework/Graphics/DX12/Resource/ConstantBufferManager.h"
+#include "Framework/Graphics/DX12/Resource/SRVManager.h"
 
 namespace Framework {
 namespace Graphics {
@@ -23,6 +24,8 @@ public:
     DX12Manager* getDX12Manager() const { return mManager.get(); }
 
     ConstantBufferManager* getConstantBufferManager() const { return mConstantBufferManager.get(); }
+
+    SRVManager* getSRVManager() const { return mSRVManager.get(); }
 protected:
     /**
     * @brief コンストラクタ
@@ -35,6 +38,7 @@ protected:
 private:
     std::unique_ptr<DX12Manager> mManager;
     std::unique_ptr<ConstantBufferManager> mConstantBufferManager;
+    std::unique_ptr<SRVManager> mSRVManager;
 };
 
 } //Graphics 

@@ -7,6 +7,7 @@
 namespace Framework {
 namespace Graphics {
 class ShaderResourceView;
+class Texture;
 
 /**
 * @class SRVManager
@@ -27,12 +28,14 @@ public:
 
     void beginUpdate();
 
-    void endUpdate();
+    void endUpdate(ID3D12GraphicsCommandList* commandList);
 
-    void setResource();
+    void setResource(const std::shared_ptr<Texture> texture);
 private:
     static constexpr UINT TEXTURE_RESERVATION_NUM = 10000;
     std::vector<std::unique_ptr<ShaderResourceView>> mSRVs;
+    UINT mCurrentIndex;
+    std::vector<UINT> mBeginedIndex;
 };
 
 } //Graphics 
