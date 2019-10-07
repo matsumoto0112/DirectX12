@@ -50,6 +50,8 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Math\Vector2.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Math\Vector3.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Math\Vector4.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Scene\Collecter.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Scene\Manager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\Debug.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\FPS.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\ByteReader.cpp" />
@@ -67,6 +69,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Define\Config.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Define\Path.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Define\Render.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Define\SceneType.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Device\GameDevice.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Game.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Color4.h" />
@@ -124,6 +127,10 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Math\Vector2.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Math\Vector3.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Math\Vector4.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Scene\Collecter.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Scene\Manager.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Scene\SceneBase.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Scene\SceneDataBase.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\FPS.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Utility\IO\ByteReader.h" />

@@ -10,6 +10,7 @@
     <ClCompile Include="DX12\D3D12ExecuteIndirect.cpp" />
     <ClCompile Include="DX12\DXSample.cpp" />
     <ClCompile Include="DX12\Win32Application.cpp" />
+    <ClCompile Include="Scene\Impl\ExecuteIndirect.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
@@ -32,6 +33,7 @@
     <ClInclude Include="DX12\DXSample.h" />
     <ClInclude Include="DX12\DXSampleHelper.h" />
     <ClInclude Include="DX12\Win32Application.h" />
+    <ClInclude Include="Scene\Impl\ExecuteIndirect.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\Shader\PixelShader.hlsl" />
