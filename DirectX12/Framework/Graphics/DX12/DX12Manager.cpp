@@ -171,15 +171,15 @@ void DX12Manager::createPipeline() {
         return blendDesc;
     };
 
+    mRootSignature = std::make_shared<RootSignature>();
+    mRootSignature->addStaticSamplerParameter(Sampler::createStaticSampler(FilterMode::Linear, AddressMode::Clamp, VisibilityType::All, 0));
+    mRootSignature->createDX12RootSignature();
+
     Framework::Utility::ShaderReader vsreader((std::string)Framework::Define::Path::getInstance().shader + "VertexShader.cso");
     std::vector<BYTE> vs = vsreader.get();
     std::vector<D3D12_INPUT_ELEMENT_DESC> elemDescs = vsreader.getShaderReflection();
     Framework::Utility::ShaderReader psreader((std::string)Framework::Define::Path::getInstance().shader + "PixelShader.cso");
     std::vector<BYTE> ps = psreader.get();
-
-    mRootSignature = std::make_shared<RootSignature>();
-    mRootSignature->addStaticSamplerParameter(Sampler::createStaticSampler(FilterMode::Linear, AddressMode::Wrap, VisibilityType::All, 0));
-    mRootSignature->createDX12RootSignature();
 
     mDefaultPipeline = std::make_unique<Pipeline>(mRootSignature);
     mDefaultPipeline->setVertexShader({ vs.data(),vs.size() });

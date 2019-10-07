@@ -86,6 +86,8 @@
     <ClCompile Include="DX12\Win32Application.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Scene\Impl\ExecuteIndirect.cpp" />
+    <ClCompile Include="Scene\Impl\RenderSamplingTexture.cpp" />
+    <ClCompile Include="Scene\Impl\RenderWhiteModel.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -98,6 +100,8 @@
     <ClInclude Include="DX12\DXSampleHelper.h" />
     <ClInclude Include="DX12\Win32Application.h" />
     <ClInclude Include="Scene\Impl\ExecuteIndirect.h" />
+    <ClInclude Include="Scene\Impl\RenderSamplingTexture.h" />
+    <ClInclude Include="Scene\Impl\RenderWhiteModel.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -125,6 +129,14 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
       <FileType>Document</FileType>
     </None>
+    <FxCompile Include="Resources\Shader\3D\Pos_UV_PS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="Resources\Shader\3D\Pos_UV_VS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+    </FxCompile>
     <FxCompile Include="Resources\Shader\PixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>

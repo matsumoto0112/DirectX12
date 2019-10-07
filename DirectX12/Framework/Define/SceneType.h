@@ -9,6 +9,8 @@ namespace Define {
 */
 enum class SceneType {
     ExecuteIndirect,
+    RenderWhiteModel,
+    RenderSamplingTexture,
 };
 
 } //Define 

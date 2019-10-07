@@ -11,6 +11,8 @@
     <ClCompile Include="DX12\DXSample.cpp" />
     <ClCompile Include="DX12\Win32Application.cpp" />
     <ClCompile Include="Scene\Impl\ExecuteIndirect.cpp" />
+    <ClCompile Include="Scene\Impl\RenderWhiteModel.cpp" />
+    <ClCompile Include="Scene\Impl\RenderSamplingTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
@@ -34,6 +36,8 @@
     <ClInclude Include="DX12\DXSampleHelper.h" />
     <ClInclude Include="DX12\Win32Application.h" />
     <ClInclude Include="Scene\Impl\ExecuteIndirect.h" />
+    <ClInclude Include="Scene\Impl\RenderWhiteModel.h" />
+    <ClInclude Include="Scene\Impl\RenderSamplingTexture.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\Shader\PixelShader.hlsl" />
@@ -43,6 +47,8 @@
     <FxCompile Include="Resources\Shader\2D\Texture2D_PS.hlsl" />
     <FxCompile Include="Resources\Shader\3D\Only_Position_VS.hlsl" />
     <FxCompile Include="Resources\Shader\3D\Only_Position_PS.hlsl" />
+    <FxCompile Include="Resources\Shader\3D\Pos_UV_VS.hlsl" />
+    <FxCompile Include="Resources\Shader\3D\Pos_UV_PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shader\Utility\ShaderDefine.hlsli" />

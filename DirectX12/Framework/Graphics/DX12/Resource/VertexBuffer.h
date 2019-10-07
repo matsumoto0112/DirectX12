@@ -2,6 +2,7 @@
 #include <vector>
 #include <d3d12.h>
 #include "Framework/Graphics/DX12/DXInterfaceAccessor.h"
+#include "Framework/Graphics/DX12/Helper.h"
 #include "Framework/Utility/Typedef.h"
 
 namespace Framework {
