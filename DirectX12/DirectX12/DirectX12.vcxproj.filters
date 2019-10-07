@@ -1,18 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="Source\Scene\Impl\ExecuteIndirect.cpp" />
+    <ClCompile Include="Source\Scene\Impl\RenderSamplingTexture.cpp" />
+    <ClCompile Include="Source\Scene\Impl\RenderWhiteModel.cpp" />
+    <ClCompile Include="Source\DX12\D3D12ExecuteIndirect.cpp" />
+    <ClCompile Include="Source\DX12\DXSample.cpp" />
+    <ClCompile Include="Source\DX12\Win32Application.cpp" />
+    <ClCompile Include="Source\main.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="Source\stdafx.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="DX12\D3D12ExecuteIndirect.cpp" />
-    <ClCompile Include="DX12\DXSample.cpp" />
-    <ClCompile Include="DX12\Win32Application.cpp" />
-    <ClCompile Include="Scene\Impl\ExecuteIndirect.cpp" />
-    <ClCompile Include="Scene\Impl\RenderWhiteModel.cpp" />
-    <ClCompile Include="Scene\Impl\RenderSamplingTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
@@ -26,18 +26,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
+    <ClInclude Include="Source\Scene\Impl\ExecuteIndirect.h" />
+    <ClInclude Include="Source\Scene\Impl\RenderSamplingTexture.h" />
+    <ClInclude Include="Source\Scene\Impl\RenderWhiteModel.h" />
+    <ClInclude Include="Source\DX12\D3D12ExecuteIndirect.h" />
+    <ClInclude Include="Source\DX12\d3dx12.h" />
+    <ClInclude Include="Source\DX12\DXSample.h" />
+    <ClInclude Include="Source\DX12\DXSampleHelper.h" />
+    <ClInclude Include="Source\DX12\Win32Application.h" />
+    <ClInclude Include="Source\stdafx.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="DX12\D3D12ExecuteIndirect.h" />
-    <ClInclude Include="DX12\d3dx12.h" />
-    <ClInclude Include="DX12\DXSample.h" />
-    <ClInclude Include="DX12\DXSampleHelper.h" />
-    <ClInclude Include="DX12\Win32Application.h" />
-    <ClInclude Include="Scene\Impl\ExecuteIndirect.h" />
-    <ClInclude Include="Scene\Impl\RenderWhiteModel.h" />
-    <ClInclude Include="Scene\Impl\RenderSamplingTexture.h" />
+    <ClInclude Include="Source\targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\Shader\PixelShader.hlsl" />

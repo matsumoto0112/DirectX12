@@ -81,29 +81,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DX12\D3D12ExecuteIndirect.cpp" />
-    <ClCompile Include="DX12\DXSample.cpp" />
-    <ClCompile Include="DX12\Win32Application.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Scene\Impl\ExecuteIndirect.cpp" />
-    <ClCompile Include="Scene\Impl\RenderSamplingTexture.cpp" />
-    <ClCompile Include="Scene\Impl\RenderWhiteModel.cpp" />
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="Source\DX12\D3D12ExecuteIndirect.cpp" />
+    <ClCompile Include="Source\DX12\DXSample.cpp" />
+    <ClCompile Include="Source\DX12\Win32Application.cpp" />
+    <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\Scene\Impl\ExecuteIndirect.cpp" />
+    <ClCompile Include="Source\Scene\Impl\RenderSamplingTexture.cpp" />
+    <ClCompile Include="Source\Scene\Impl\RenderWhiteModel.cpp" />
+    <ClCompile Include="Source\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DX12\D3D12ExecuteIndirect.h" />
-    <ClInclude Include="DX12\d3dx12.h" />
-    <ClInclude Include="DX12\DXSample.h" />
-    <ClInclude Include="DX12\DXSampleHelper.h" />
-    <ClInclude Include="DX12\Win32Application.h" />
-    <ClInclude Include="Scene\Impl\ExecuteIndirect.h" />
-    <ClInclude Include="Scene\Impl\RenderSamplingTexture.h" />
-    <ClInclude Include="Scene\Impl\RenderWhiteModel.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
+    <ClInclude Include="Source\DX12\D3D12ExecuteIndirect.h" />
+    <ClInclude Include="Source\DX12\d3dx12.h" />
+    <ClInclude Include="Source\DX12\DXSample.h" />
+    <ClInclude Include="Source\DX12\DXSampleHelper.h" />
+    <ClInclude Include="Source\DX12\Win32Application.h" />
+    <ClInclude Include="Source\Scene\Impl\ExecuteIndirect.h" />
+    <ClInclude Include="Source\Scene\Impl\RenderSamplingTexture.h" />
+    <ClInclude Include="Source\Scene\Impl\RenderWhiteModel.h" />
+    <ClInclude Include="Source\stdafx.h" />
+    <ClInclude Include="Source\targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\Shader\2D\Texture2D_PS.hlsl">
