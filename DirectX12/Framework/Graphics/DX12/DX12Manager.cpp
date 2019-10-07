@@ -116,10 +116,6 @@ DX12Manager::DX12Manager(HWND hWnd, UINT width, UINT height) {
     rtvHeapDesc.NodeMask = 1;
     throwIfFailed(mDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&mRTVHeap)));
 
-    throwIfFailed(mDevice->CreateCommandAllocator(
-        D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT,
-        IID_PPV_ARGS(&mCommandAllocator)));
-
     //RTVì¬
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle;
     rtvHandle = mRTVHeap->GetCPUDescriptorHandleForHeapStart();
@@ -130,14 +126,14 @@ DX12Manager::DX12Manager(HWND hWnd, UINT width, UINT height) {
         throwIfFailed(mSwapChain->GetBuffer(n, IID_PPV_ARGS(&mRenderTargets[n])));
         mDevice->CreateRenderTargetView(mRenderTargets[n].Get(), nullptr, rtvHandle);
         rtvHandle.ptr += INT64(1) * UINT64(mRTVDescriptorSize);
+
+        throwIfFailed(mDevice->CreateCommandAllocator(
+            D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT,
+            IID_PPV_ARGS(&mCommandAllocator[n])));
+        mFenceValue[n] = 1;
     }
 
-    throwIfFailed(mDevice->CreateCommandAllocator(
-        D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT,
-        IID_PPV_ARGS(&mCommandAllocator)));
-
     throwIfFailed(mDevice->CreateFence(0, D3D12_FENCE_FLAGS::D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
-    mFenceValue = 1;
     mFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!mFenceEvent) {
         throwIfFailed(HRESULT_FROM_WIN32(GetLastError()));
@@ -197,12 +193,12 @@ void DX12Manager::createPipeline() {
     mDefaultPipeline->setRenderTarget({ DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM });
     mDefaultPipeline->createPipelineState();
 
-    throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator.Get(), mDefaultPipeline->getPipelineState(), IID_PPV_ARGS(&mCommandList)));
+    throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator[mFrameIndex].Get(), mDefaultPipeline->getPipelineState(), IID_PPV_ARGS(&mCommandList)));
 }
 
 void DX12Manager::drawBegin() {
-    throwIfFailed(mCommandAllocator->Reset());
-    throwIfFailed(mCommandList->Reset(mCommandAllocator.Get(), mDefaultPipeline->getPipelineState()));
+    throwIfFailed(mCommandAllocator[mFrameIndex]->Reset());
+    throwIfFailed(mCommandList->Reset(mCommandAllocator[mFrameIndex].Get(), mDefaultPipeline->getPipelineState()));
 
     mRootSignature->addToCommandList(mCommandList.Get());
     mDefaultPipeline->addToCommandList(mCommandList.Get());
@@ -236,15 +232,15 @@ void DX12Manager::executeCommand() {
 }
 
 void DX12Manager::waitForPreviousFrame() {
-    const UINT64 fence = mFenceValue;
+    const UINT64 fence = mFenceValue[mFrameIndex];
     throwIfFailed(mCommandQueue->Signal(mFence.Get(), fence));
-    mFenceValue++;
+    mFrameIndex = mSwapChain->GetCurrentBackBufferIndex();
     if (mFence->GetCompletedValue() < fence) {
         throwIfFailed(mFence->SetEventOnCompletion(fence, mFenceEvent));
         WaitForSingleObject(mFenceEvent, INFINITE);
     }
+    mFenceValue[mFrameIndex] = fence + 1;
 
-    mFrameIndex = mSwapChain->GetCurrentBackBufferIndex();
 }
 
 } //Graphics 

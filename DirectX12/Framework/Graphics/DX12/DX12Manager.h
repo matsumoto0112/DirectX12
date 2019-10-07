@@ -64,12 +64,12 @@ private:
     ComPtr<ID3D12CommandQueue> mCommandQueue; //!< コマンドキュー
     ComPtr<IDXGISwapChain3> mSwapChain; //!< スワップチェイン
     UINT mFrameIndex; //!< 現在のバックバッファフレーム番号
-    ComPtr<ID3D12CommandAllocator> mCommandAllocator; //!< コマンドアロケータ
+    ComPtr<ID3D12CommandAllocator> mCommandAllocator[FRAME_COUNT]; //!< コマンドアロケータ
     ComPtr<ID3D12Resource> mRenderTargets[FRAME_COUNT]; //!< レンダーターゲット
     ComPtr<ID3D12DescriptorHeap> mRTVHeap; //!< RTV用
     ComPtr<ID3D12GraphicsCommandList> mCommandList; //!< コマンドリスト
     ComPtr<ID3D12Fence> mFence; //!< フェンス
-    UINT64 mFenceValue;
+    UINT64 mFenceValue[FRAME_COUNT];
     HANDLE mFenceEvent;
     UINT mRTVDescriptorSize; //!< RTVディスクリプタヒープの大きさ
     D3D12_VIEWPORT mViewport;

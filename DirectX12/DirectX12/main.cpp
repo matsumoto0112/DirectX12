@@ -130,7 +130,6 @@ public:
         mTexture = std::make_unique<Framework::Graphics::Texture>((std::string)Framework::Define::Path::getInstance().fbx + "item/textures/uv.png");
         //mTexture2 = std::make_unique<Framework::Graphics::Texture>((std::string)Framework::Define::Path::getInstance().texture + "bg2.png");
 
-
         mPipeline = std::make_unique<Pipeline>(Framework::Graphics::RenderingManager::getInstance().getDX12Manager()->getMainRootSignature());
         Framework::Utility::ShaderReader vsReader((std::string)Framework::Define::Path::getInstance().shader + "VertexShader.cso");
         std::vector<BYTE> vs = vsReader.get();
@@ -157,6 +156,8 @@ public:
 
         mAlphaTheta = 0.0f;
         mObjectNum = 2;
+
+
         return true;
     }
 protected:
@@ -202,7 +203,7 @@ protected:
         for (int i = 0; i < 1; i++) {
             mPipeline->addToCommandList(mCommandList);
             mMVP.world = Matrix4x4::transposition(
-                Matrix4x4::createScale(Vector3(5.0f,5.0f,5.0f)) * 
+                Matrix4x4::createScale(Vector3(5.0f, 5.0f, 5.0f)) *
                 Matrix4x4::createRotationY(mAlphaTheta)
             );
 

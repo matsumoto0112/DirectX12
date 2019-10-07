@@ -33,6 +33,7 @@
     <FxCompile Include="Resources\Shader\2D\Texture2D_PS.hlsl" />
     <FxCompile Include="Resources\Shader\3D\Only_Position_VS.hlsl" />
     <FxCompile Include="Resources\Shader\3D\Only_Position_PS.hlsl" />
+    <FxCompile Include="Resources\Shader\ComputeShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shader\Utility\ShaderDefine.hlsli" />
