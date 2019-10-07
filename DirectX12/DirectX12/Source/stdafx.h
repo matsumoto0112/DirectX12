@@ -22,12 +22,11 @@
 #define NOMINMAX
 #include <windows.h>
 
-#include <dxgi1_4.h>
 #include <d3d12.h>
+#include <dxgi1_4.h>
 #include <D3Dcompiler.h>
-#include "DX12/d3dx12.h"
+#include "DirectX12/Source/DX12/d3dx12.h"
 #include <DirectXMath.h>
-//#include <pix3.h>
 
 #include <wrl.h>
 #include <vector>
