@@ -48,6 +48,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\RenderingManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\SRVManager.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Graphics\DX12\Resource\ShaderResourceView.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\FBXLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Math\IntVector2.h" />

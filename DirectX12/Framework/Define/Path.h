@@ -16,11 +16,13 @@ public:
     Framework::Utility::GetterProperty<std::string> shader{ mShader }; //!< シェーダファイルへのパス
     Framework::Utility::GetterProperty<std::string> resource{ mResource }; //!< リソースファイルへのパス
     Framework::Utility::GetterProperty<std::string> texture{ mTexture }; //!< テクスチャへのパス
+    Framework::Utility::GetterProperty<std::string> fbx{ mFBX }; //!< FBXモデルへのパス
 private:
     std::string mExe;
     std::string mShader;
     std::string mResource;
     std::string mTexture;
+    std::string mFBX;
 protected:
     /**
     * @brief コンストラクタ

@@ -53,6 +53,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\Debug.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\FPS.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\ByteReader.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\FBXLoader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\ShaderReader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\IO\TextureLoader.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)Utility\Time.cpp" />

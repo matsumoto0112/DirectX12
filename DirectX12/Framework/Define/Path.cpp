@@ -27,6 +27,7 @@ Path::Path() {
     mShader = sDir + "/cso/Resources/Shader/";
     mResource = sDir + "/Resources/";
     mTexture = mResource + "Textures/";
+    mFBX = mResource + "FBX/";
 }
 
 Path::~Path() { }

@@ -42,6 +42,7 @@
 #include "Framework/Graphics/DX12/Material/CBStruct.h"
 #include "Framework/Graphics/DX12/Resource/ConstantBuffer.h"
 #include "Framework/Graphics/DX12/Resource/ShaderResourceView.h"
+#include "Framework/Utility/IO/FBXLoader.h"
 
 namespace {
 using namespace Framework::Graphics;
@@ -99,14 +100,27 @@ public:
             mImGUIDescriptorSrvHeap->GetCPUDescriptorHandleForHeapStart(),
             mImGUIDescriptorSrvHeap->GetGPUDescriptorHandleForHeapStart());
 
-        std::vector<Vertex> vertices{
-            {{-0.5f,0.5f,0.0f,1.0f},{0.0f,0.0f},Framework::Graphics::Color4::WHITE },
-            {{0.5f,0.5f,0.0f,1.0f},{1.0f,0.0f},Framework::Graphics::Color4::WHITE },
-            {{0.5f,-0.5f,0.0f,1.0f},{1.0f,1.0f},Framework::Graphics::Color4::WHITE },
-            {{-0.5f,-0.5f,0.0f,1.0f},{0.0f,1.0f},Framework::Graphics::Color4::WHITE },
-        };
+        //std::vector<Vertex> vertices{
+        //    {{-0.5f,0.5f,0.0f,1.0f},{0.0f,0.0f},Framework::Graphics::Color4::WHITE },
+        //    {{0.5f,0.5f,0.0f,1.0f},{1.0f,0.0f},Framework::Graphics::Color4::WHITE },
+        //    {{0.5f,-0.5f,0.0f,1.0f},{1.0f,1.0f},Framework::Graphics::Color4::WHITE },
+        //    {{-0.5f,-0.5f,0.0f,1.0f},{0.0f,1.0f},Framework::Graphics::Color4::WHITE },
+        //};
 
-        std::vector<UINT> indices{ 0,1,2,0,2,3 };
+        //std::vector<UINT> indices{ 0,1,2,0,2,3 };
+        Framework::Utility::FBXLoader loader((std::string)Framework::Define::Path::getInstance().fbx + "item/item.fbx");
+        std::vector<Framework::Math::Vector4> pos = loader.getPosition();
+        std::vector<Vertex> vertices(pos.size());
+        for (int i = 0; i < pos.size(); i++) {
+            vertices[i].pos = pos[i];
+        }
+        std::vector<UINT> indices(pos.size());
+        for (int i = 0; i < indices.size() / 3; i++) {
+            indices[i * 3 + 0] = i * 3 + 0;
+            indices[i * 3 + 1] = i * 3 + 1;
+            indices[i * 3 + 2] = i * 3 + 2;
+        }
+
         mVertexBuffer = std::make_unique<Framework::Graphics::VertexBuffer>(vertices);
         mIndexBuffer = std::make_unique<Framework::Graphics::IndexBuffer>(indices, Framework::Graphics::PrimitiveTolopolyType::TriangleList);
 
@@ -162,10 +176,10 @@ protected:
         ImGui::End();
 
         mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(0, 0, 0)));
-        mMVP.view = Matrix4x4::transposition(Matrix4x4::createView({ Vector3(0,0,-10),Vector3(0,0,0),Vector3(0,1,0) }));
-        float ratio = static_cast<float>(Framework::Define::Config::getInstance().screenWidth) / static_cast<float>(Framework::Define::Config::getInstance().screenHeight);
+        mMVP.view = Matrix4x4::transposition(Matrix4x4::createView({ Vector3(0,10,-10),Vector3(0,0,0),Vector3(0,1,0) }));
+        float ratio = static_cast<float>(Framework::Define::Config::getInstance().screenHeight) / static_cast<float>(Framework::Define::Config::getInstance().screenWidth);
         mMVP.proj = Matrix4x4::transposition(Matrix4x4::createProjection({ 45.0f,ratio,0.1f,1000.0f }));
-
+        mAlphaTheta += 10.0f *Framework::Utility::Time::getInstance().deltaTime;
         if (Framework::Device::GameDevice::getInstance().getInputManager()->getKeyboard().getKeyDown(Framework::Input::KeyCode::A)) {
             mMode = !mMode;
         }
@@ -180,7 +194,7 @@ protected:
 
         ID3D12GraphicsCommandList* mCommandList = Framework::Graphics::RenderingManager::getInstance().getDX12Manager()->getCommandList();
 
-        constexpr float RADIUS = 1.0f;
+        constexpr float RADIUS = 5.0f;
 
         for (int i = 0; i < mObjectNum; i++) {
             mPipeline->addToCommandList(mCommandList);
@@ -189,7 +203,11 @@ protected:
             float theta = 360.0f * i / mObjectNum;
             float sin = Framework::Math::MathUtil::sin(theta) * RADIUS;
             float cos = Framework::Math::MathUtil::cos(theta) * RADIUS;
-            mMVP.world = Matrix4x4::transposition(Matrix4x4::createTranslate(Vector3(cos, sin, 0)));
+            mMVP.world = Matrix4x4::transposition(
+                Matrix4x4::createRotationZ(mAlphaTheta * 5) *
+                Matrix4x4::createRotationX(mAlphaTheta * 7) *
+                Matrix4x4::createRotationY(mAlphaTheta) *
+                Matrix4x4::createTranslate(Vector3(cos, 0, sin)));
 
             cbManager->beingCBufferUpdate();
             cbManager->updateCBuffer(mMVP);
