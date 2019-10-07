@@ -2,8 +2,18 @@
 #include "Framework/Utility/Debug.h"
 
 namespace {
-Framework::Math::Vector4 toVector4(const FbxVector4& pos) {
+static const Framework::Math::Vector2 DEFAULT_UV = Framework::Math::Vector2::ZERO;
+
+Framework::Math::Vector4 toPositionVector4(const FbxVector4& pos) {
+    //Xだけ反転しているっぽい
     return Framework::Math::Vector4(-pos[0], pos[1], pos[2], 1.0f);
+}
+
+Framework::Math::Vector2 toUVVector2(const FbxVector2& uv) {
+    Framework::Math::Vector2 res;
+    res.x = (float)uv[0];
+    res.y = 1.0f - (float)uv[1];
+    return res;
 }
 
 //読み込んだ頂点を正しくコントロールするための行列の作成
@@ -34,7 +44,30 @@ std::vector<Framework::Math::Vector4> positions(FbxMesh* mesh) {
     std::vector<Framework::Math::Vector4> result(size);
     for (int i = 0; i < size; i++) {
         int index = polygonVertexIndex[i];
-        result[i] = toVector4(source[index]);
+        result[i] = toPositionVector4(source[index]);
+    }
+    return result;
+}
+
+std::vector<Framework::Math::Vector2> uvs(FbxMesh* mesh) {
+    FbxStringList uvNames;
+    mesh->GetUVSetNames(uvNames);
+    const int size = mesh->GetPolygonVertexCount();
+    std::vector<Framework::Math::Vector2> result(size);
+    //UVが存在しなければデフォルトの値を使用する
+    if (uvNames.GetCount() == 0) {
+        for (int i = 0; i < size; i++) {
+            result[i] = DEFAULT_UV;
+        }
+    }
+    else {
+        FbxArray<FbxVector2> uvs;
+        //UVはセットの先頭のもののみ使用する
+        mesh->GetPolygonVertexUVs(uvNames[0], uvs);
+        for (int i = 0; i < size; i++) {
+            const FbxVector2& uv = uvs[i];
+            result[i] = toUVVector2(uv);
+        }
     }
     return result;
 }
@@ -86,6 +119,23 @@ std::vector<Math::Vector4> FBXLoader::getPosition() const {
     }
 
     return result;
+}
+
+bool FBXLoader::hasUV() const {
+    return false;
+}
+
+std::vector<Math::Vector2> FBXLoader::getUV() const {
+    const int meshNum = mScene->GetMemberCount<FbxMesh>();
+    std::vector<Math::Vector2> result;
+
+    for (int i = 0; i < meshNum; i++) {
+        std::vector<Math::Vector2> uv = uvs(mScene->GetMember<FbxMesh>(i));
+        result.insert(result.end(), uv.begin(), uv.end());
+    }
+
+    return result;
+
 }
 
 } //Utility 

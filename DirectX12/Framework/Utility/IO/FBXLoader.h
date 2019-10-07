@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include <fbxsdk.h>
+#include "Framework/Math/Vector2.h"
 #include "Framework/Math/Vector4.h"
 
 namespace Framework {
@@ -31,6 +32,9 @@ public:
     void load(const std::string& filepath, bool triangulate = false);
 
     std::vector<Math::Vector4> getPosition() const;
+
+    bool hasUV() const;
+    std::vector<Math::Vector2> getUV() const;
 private:
     FbxManager* mManager; //!< FBXŠÇ—
     FbxScene* mScene; //!< “Ç‚Ýž‚ñ‚¾ƒV[ƒ“

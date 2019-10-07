@@ -18,5 +18,6 @@ float4 main(PSInput input) : SV_Target
     //float4 t2 = tex2.Sample(samplerState, input.uv);
     //return lerp(t1, t2, input.uv.x);
     return float4(1.0f, 1.0f, 1.0f, 1.0f);
+    //return tex.Sample(samplerState, input.uv);
 
 }
