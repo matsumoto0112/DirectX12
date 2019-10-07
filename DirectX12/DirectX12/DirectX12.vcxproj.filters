@@ -7,6 +7,9 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="DX12\D3D12ExecuteIndirect.cpp" />
+    <ClCompile Include="DX12\DXSample.cpp" />
+    <ClCompile Include="DX12\Win32Application.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
@@ -24,6 +27,11 @@
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="DX12\D3D12ExecuteIndirect.h" />
+    <ClInclude Include="DX12\d3dx12.h" />
+    <ClInclude Include="DX12\DXSample.h" />
+    <ClInclude Include="DX12\DXSampleHelper.h" />
+    <ClInclude Include="DX12\Win32Application.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\Shader\PixelShader.hlsl" />
@@ -33,10 +41,11 @@
     <FxCompile Include="Resources\Shader\2D\Texture2D_PS.hlsl" />
     <FxCompile Include="Resources\Shader\3D\Only_Position_VS.hlsl" />
     <FxCompile Include="Resources\Shader\3D\Only_Position_PS.hlsl" />
-    <FxCompile Include="Resources\Shader\ComputeShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shader\Utility\ShaderDefine.hlsli" />
     <None Include="Resources\Shader\Utility\UtilFunc.hlsli" />
+    <None Include="Resources\Shader\compute.hlsl" />
+    <None Include="Resources\Shader\shaders.hlsl" />
   </ItemGroup>
 </Project>
