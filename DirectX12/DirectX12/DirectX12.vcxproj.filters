@@ -32,7 +32,6 @@
     <ClInclude Include="Source\Scene\Impl\RenderSamplingTexture.h" />
     <ClInclude Include="Source\Scene\Impl\RenderWhiteModel.h" />
     <ClInclude Include="Source\DX12\D3D12ExecuteIndirect.h" />
-    <ClInclude Include="Source\DX12\d3dx12.h" />
     <ClInclude Include="Source\DX12\DXSample.h" />
     <ClInclude Include="Source\DX12\DXSampleHelper.h" />
     <ClInclude Include="Source\DX12\Win32Application.h" />

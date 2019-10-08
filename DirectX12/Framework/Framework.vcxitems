@@ -73,6 +73,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Device\GameDevice.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Game.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\Color4.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\d3dx12.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Material\CBStruct.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Desc\BlendState.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\Desc\Rasterizer.h" />
