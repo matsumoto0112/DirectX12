@@ -16,6 +16,7 @@ struct SceneConstantBuffer
     float4 velocity;
     float4 offset;
     float4 color;
+    float4x4 view;
     float4x4 projection;
     float4 padding[9];
 };

@@ -14,6 +14,7 @@ cbuffer SceneConstantBuffer : register(b0)
     float4 velocity;
     float4 offset;
     float4 color;
+    float4x4 view;
     float4x4 projection;
 };
 
@@ -27,7 +28,8 @@ PSInput VSMain(float4 position : POSITION)
 {
     PSInput result;
 
-    result.position = mul(position + offset, projection);
+    float4x4 m = mul(view, projection);
+    result.position = mul(position + offset, m);
 
     result.color = color;
     //float intensity = saturate((4.0f - result.position.z) / 2.0f);

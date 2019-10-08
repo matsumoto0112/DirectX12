@@ -455,13 +455,20 @@ void ExecuteIndirect::loadAssets() {
 
         NAME_D3D12_OBJECT(mConstantBuffer);
 
+        Framework::Math::Vector3 eye(0, 0, -10);
+        Framework::Math::Vector3 at(0, 0, 0);
+        Framework::Math::Vector3 up = Framework::Math::Vector3::UP;
+        Framework::Math::Matrix4x4 view = Framework::Math::Matrix4x4::transposition(Framework::Math::Matrix4x4::createView({ eye,at,up }));
+        const float ratio = static_cast<float>(mWidth) / mHeight;
+        Framework::Math::Matrix4x4 proj = Framework::Math::Matrix4x4::transposition(Framework::Math::Matrix4x4::createProjection({ 45.0f, ratio,0.01,20.0f }));
+
         //データ初期化
         for (UINT n = 0; n < TRIANGLE_COUNT; n++) {
-            mConstantBufferData[n].velocity = XMFLOAT4(getRandomFloat(0.01f, 0.02f), 0.0f, 0.0f, 0.0f);
-            mConstantBufferData[n].offset = XMFLOAT4(getRandomFloat(-5.0f, -1.5f), getRandomFloat(-1.0f, 1.0f), getRandomFloat(0.0f, 2.0f), 0.0f);
-            mConstantBufferData[n].color = XMFLOAT4(0.0f, 1.0f, 1.0f, 0.1f);
-            const float ratio = static_cast<float>(mWidth) / mHeight;
-            XMStoreFloat4x4(&mConstantBufferData[n].projection, XMMatrixTranspose(XMMatrixPerspectiveFovLH(XM_PIDIV4, ratio, 0.01f, 20.0f)));
+            mConstantBufferData[n].velocity = Framework::Math::Vector4(getRandomFloat(0.01f, 0.02f), 0.0f, 0.0f);
+            mConstantBufferData[n].offset = Framework::Math::Vector4(getRandomFloat(-5.0f, -1.5f), getRandomFloat(-1.0f, 1.0f), getRandomFloat(0.0f, 2.0f), 0.0f);
+            mConstantBufferData[n].color = Framework::Graphics::Color4(0.0f, 1.0f, 1.0f, 0.1f);
+            mConstantBufferData[n].view = view;
+            mConstantBufferData[n].projection = proj;
         }
 
         //コンスタントバッファデータ初期化

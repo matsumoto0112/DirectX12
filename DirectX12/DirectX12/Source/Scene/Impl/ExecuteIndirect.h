@@ -11,10 +11,11 @@ struct Vertex {
 };
 
 struct SceneConstantBuffer {
-    DirectX::XMFLOAT4 velocity;
-    DirectX::XMFLOAT4 offset;
-    DirectX::XMFLOAT4 color;
-    DirectX::XMFLOAT4X4 projection;
+    Framework::Math::Vector4 velocity;
+    Framework::Math::Vector4 offset;
+    Framework::Graphics::Color4 color;
+    Framework::Math::Matrix4x4 view;
+    Framework::Math::Matrix4x4 projection;
 
     float dummy[36];
 };
