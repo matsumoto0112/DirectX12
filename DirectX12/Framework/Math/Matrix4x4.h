@@ -318,12 +318,12 @@ public:
     Quaternion toQuaternion() const;
 
     /**
-    * @brief 転置する
+    * @brief 転置行列を取得する
     */
-    Matrix4x4& transpose();
+    Matrix4x4 transpose()const;
 
     /**
-    * @brief 転置行列
+    * @brief 転置行列を取得する
     */
     static Matrix4x4 transposition(const Matrix4x4& mat);
     /**

@@ -49,11 +49,12 @@ ShadowMap::ShadowMap() {
     mPipeline->setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE::D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
     mPipeline->setBlendState(bd);
     mPipeline->setRasterizerState(Framework::Graphics::Rasterizer(Framework::Graphics::FillMode::Solid, Framework::Graphics::CullMode::Back));
+    mPipeline->setDepthStencil(CD3DX12_DEPTH_STENCIL_DESC1(D3D12_DEFAULT), DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT);
     mPipeline->createPipelineState();
 
-    mMVP.view = Math::Matrix4x4::transposition(Math::Matrix4x4::createView({ Math::Vector3(0,5,-5),Math::Vector3(0,0,0),Math::Vector3(0,1,0) }));
+    mMVP.view = Math::Matrix4x4::createView({ Math::Vector3(0,5,-5),Math::Vector3(0,0,0),Math::Vector3(0,1,0) }).transpose();
     float ratio = static_cast<float>(Define::Config::getInstance().screenHeight) / static_cast<float>(Define::Config::getInstance().screenWidth);
-    mMVP.proj = Math::Matrix4x4::transposition(Math::Matrix4x4::createProjection({ 45.0f,ratio,0.1f,100.0f }));
+    mMVP.proj = Math::Matrix4x4::createProjection({ 45.0f,ratio,0.1f,100.0f }).transpose();
 }
 
 ShadowMap::~ShadowMap() { }
@@ -64,7 +65,7 @@ void ShadowMap::update() {
     mRotate += 1.0f;
     static const Math::Vector3 scale(5.0f, 5.0f, 5.0f);
     Math::Matrix4x4 mvp = Math::Matrix4x4::createScale(scale) * Math::Matrix4x4::createRotationY(mRotate);
-    mMVP.world = Math::Matrix4x4::transposition(mvp);
+    mMVP.world = mvp.transpose();
 }
 
 bool ShadowMap::isEndScene() const {
@@ -79,7 +80,6 @@ void ShadowMap::draw() {
     constexpr float RADIUS = 5.0f;
 
     mPipeline->addToCommandList(mCommandList);
-
     cbManager->beingCBufferUpdate();
     cbManager->updateCBuffer(mMVP);
 
@@ -88,6 +88,8 @@ void ShadowMap::draw() {
     mVertexBuffer->addToCommandList(mCommandList);
     mIndexBuffer->addToCommandList(mCommandList);
     mIndexBuffer->drawCall(mCommandList);
+
+
 }
 
 void ShadowMap::end() { }

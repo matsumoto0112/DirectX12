@@ -398,37 +398,41 @@ Quaternion Matrix4x4::toQuaternion() const {
     const float mult = 0.25f / biggestValue;
     float x, y, z, w;
     switch (biggestIndex) {
-        case 0:
-            x = (m[1][2] - m[2][1]) * mult;
-            y = (m[2][0] - m[0][2]) * mult;
-            z = (m[0][1] - m[1][0]) * mult;
-            w = biggestValue;
-            break;
-        case 1:
-            x = biggestValue;
-            y = (m[0][1] + m[1][0]) * mult;
-            z = (m[2][0] + m[0][2]) * mult;
-            w = (m[1][2] - m[2][1]) * mult;
-            break;
-        case 2:
-            x = (m[1][0] + m[0][1]) * mult;
-            y = biggestValue;
-            z = (m[1][2] + m[2][1]) * mult;
-            w = (m[2][0] - m[0][2]) * mult;
-            break;
-        case 3:
-            x = (m[2][0] + m[0][2]) * mult;
-            y = (m[1][2] + m[2][1]) * mult;
-            z = biggestValue;
-            w = (m[0][1] - m[1][0]) * mult;
-            break;
+    case 0:
+        x = (m[1][2] - m[2][1]) * mult;
+        y = (m[2][0] - m[0][2]) * mult;
+        z = (m[0][1] - m[1][0]) * mult;
+        w = biggestValue;
+        break;
+    case 1:
+        x = biggestValue;
+        y = (m[0][1] + m[1][0]) * mult;
+        z = (m[2][0] + m[0][2]) * mult;
+        w = (m[1][2] - m[2][1]) * mult;
+        break;
+    case 2:
+        x = (m[1][0] + m[0][1]) * mult;
+        y = biggestValue;
+        z = (m[1][2] + m[2][1]) * mult;
+        w = (m[2][0] - m[0][2]) * mult;
+        break;
+    case 3:
+        x = (m[2][0] + m[0][2]) * mult;
+        y = (m[1][2] + m[2][1]) * mult;
+        z = biggestValue;
+        w = (m[0][1] - m[1][0]) * mult;
+        break;
     }
     return Quaternion(x, y, z, w);
 }
 
-Matrix4x4& Matrix4x4::transpose() {
-    *this = transposition(*this);
-    return *this;
+Matrix4x4 Matrix4x4::transpose() const {
+    return Matrix4x4(
+        m[0][0], m[1][0], m[2][0], m[3][0],
+        m[0][1], m[1][1], m[2][1], m[3][1],
+        m[0][2], m[1][2], m[2][2], m[3][2],
+        m[0][3], m[1][3], m[2][3], m[3][3]
+    );
 }
 
 Matrix4x4 Matrix4x4::transposition(const Matrix4x4& mat) {
