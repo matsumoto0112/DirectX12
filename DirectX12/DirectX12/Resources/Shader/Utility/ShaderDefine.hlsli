@@ -33,6 +33,12 @@ cbuffer CB2 : register(b2)
     UVInfo uv;
 }
 
+float4x4 MVMatrix()
+{
+    float4x4 m = mul(mvp.world, mvp.view);
+    return m;
+}
+
 matrix MVPMatrix()
 {
     matrix m = mul(mvp.world, mvp.view);

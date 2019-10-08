@@ -53,6 +53,11 @@
     <FxCompile Include="Resources\Shader\3D\Pos_UV_VS.hlsl" />
     <FxCompile Include="Resources\Shader\3D\Pos_UV_PS.hlsl" />
     <FxCompile Include="Resources\Shader\3D\Only_Position_Output_Color_PS.hlsl" />
+    <FxCompile Include="Resources\Shader\3D\Position_Normal_VS.hlsl" />
+    <FxCompile Include="Resources\Shader\3D\Output_Normal_PS.hlsl" />
+    <FxCompile Include="Resources\Shader\3D\ShadowMap_VS.hlsl" />
+    <FxCompile Include="Resources\Shader\3D\ShadowMap_PS.hlsl" />
+    <FxCompile Include="Resources\Shader\3D\Output_Z_VS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shader\Utility\ShaderDefine.hlsli" />
