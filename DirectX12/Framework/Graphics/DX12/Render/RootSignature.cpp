@@ -46,7 +46,7 @@ RootSignature::~RootSignature() {
     mSamplers.clear();
 }
 
-void RootSignature::createDX12RootSignature() {
+void RootSignature::createDefaultRootSignature() {
     D3D12_DESCRIPTOR_RANGE1 CBRange[1];
     CBRange[0] = createRange(D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_CBV,
         Define::Render::MAX_CONSTANT_BUFFER_USE_NUM_PER_ONE_FRAME, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAGS::D3D12_DESCRIPTOR_RANGE_FLAG_NONE);

@@ -773,9 +773,6 @@ void ExecuteIndirect::populateCommandList() {
 
         mCommandList->ResourceBarrier(_countof(barriers), barriers);
 
-
-
-
         throwIfFailed(mCommandList->Close());
     }
 }

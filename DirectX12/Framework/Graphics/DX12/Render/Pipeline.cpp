@@ -11,7 +11,7 @@ Pipeline::Pipeline(std::shared_ptr<RootSignature> rootSignature)
 }
 
 Pipeline::Pipeline()
-    :mPSODesc{} { }
+    : mPSODesc{} { }
 
 
 Pipeline::~Pipeline() { }
@@ -36,8 +36,9 @@ void Pipeline::setBlendState(const D3D12_BLEND_DESC& blendDesc) {
     mPSODesc.BlendState = blendDesc;
 }
 
-void Pipeline::setDepthStencil(const D3D12_DEPTH_STENCIL_DESC& depthStencil) {
+void Pipeline::setDepthStencil(const D3D12_DEPTH_STENCIL_DESC& depthStencil, DXGI_FORMAT format) {
     mPSODesc.DepthStencilState = depthStencil;
+    mPSODesc.DSVFormat = format;
 }
 
 void Pipeline::setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE topologyType) {

@@ -137,5 +137,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)Scene\SceneDataBase.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Define\SceneType.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Graphics\DX12\d3dx12.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Define\Debug.h" />
   </ItemGroup>
 </Project>

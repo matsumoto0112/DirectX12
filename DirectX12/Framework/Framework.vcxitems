@@ -67,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)Define\Config.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)Define\Debug.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Define\Path.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Define\Render.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)Define\SceneType.h" />

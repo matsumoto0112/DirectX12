@@ -46,7 +46,7 @@ public:
     /**
     * @brief ルートシグネチャオブジェクトを作成する
     */
-    void createDX12RootSignature();
+    void createDefaultRootSignature();
     /**
     * @brief ルートシグネチャに取得する
     */

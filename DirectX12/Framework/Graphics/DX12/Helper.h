@@ -1,9 +1,17 @@
 #pragma once
 #include <stdexcept>
 #include <d3d12.h>
+#include "Framework/Graphics/DX12/d3dx12.h"
 
 namespace Framework {
 namespace Graphics {
+
+/**
+* @def オブジェクトに名前を付ける
+*/
+#define NAME_D3D12_OBJECT(x) SetName((x).Get(),L#x)
+#define NAME_D3D12_OBJECT_INDEXED(x,n) SetNameIndexed((x)[n].Get(),L#x,n)
+
 
 /**
 * @brief エラーを文字列に変換する
@@ -33,6 +41,25 @@ inline void throwIfFailed(HRESULT hr) {
         throw HrException(hr);
     }
 }
+
+/**
+* @brief デバッグ用の名前を付ける
+*/
+#if defined(_DEBUG) || defined(DBG)
+inline void SetName(ID3D12Object* pObject, LPCWSTR name) {
+    pObject->SetName(name);
+}
+inline void SetNameIndexed(ID3D12Object* pObject, LPCWSTR name, UINT index) {
+    WCHAR fullName[50];
+    if (swprintf_s(fullName, L"%s[%u]", name, index) > 0) {
+        pObject->SetName(fullName);
+    }
+}
+#else
+inline void SetName(ID3D12Object*, LPCWSTR) { }
+inline void SetNameIndexed(ID3D12Object*, LPCWSTR, UINT) { }
+#endif
+
 
 /**
 * @brief ヒーププロパティを作成する
@@ -86,6 +113,9 @@ inline D3D12_RESOURCE_BARRIER createResourceBarrier(ID3D12Resource* resource,
     return result;
 }
 
+/**
+* @brief メモリサイズを256の倍数にアラインメント
+*/
 inline UINT sizeAlignment(UINT size) {
     return ((size + 0xff) & ~0xff);
 }

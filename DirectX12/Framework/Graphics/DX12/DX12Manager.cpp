@@ -1,34 +1,36 @@
 #include "DX12Manager.h"
-#include "Framework/Utility/IO/ByteReader.h"
-#include "Framework/Graphics/DX12/Helper.h"
+#include "Framework/Define/Debug.h"
 #include "Framework/Define/Path.h"
 #include "Framework/Define/Render.h"
 #include "Framework/Utility/IO/ShaderReader.h"
-#include "Framework/Graphics/DX12/Desc/Sampler.h"
-#include "Framework/Graphics/DX12/Desc/Rasterizer.h"
 #include "Framework/Graphics/DX12/Desc/BlendState.h"
+#include "Framework/Graphics/DX12/Desc/Rasterizer.h"
+#include "Framework/Graphics/DX12/Desc/Sampler.h"
+#include "Framework/Graphics/DX12/Helper.h"
+#include "Framework/Utility/IO/ByteReader.h"
 
 namespace {
 /**
 * @brief ハードウェアアダプターを取得する
 */
-void getHardwareAdapter(IDXGIFactory2* factory, IDXGIAdapter1** ppAdapter) {
-    ComPtr<IDXGIAdapter1> adapter = nullptr;
+_Use_decl_annotations_
+void GetHardwareAdapter(IDXGIFactory2* pFactory, IDXGIAdapter1** ppAdapter) {
+    ComPtr<IDXGIAdapter1> adapter;
     *ppAdapter = nullptr;
 
-    for (UINT adapterIndex = 0; DXGI_ERROR_NOT_FOUND != factory->EnumAdapters1(adapterIndex, &adapter); adapterIndex++) {
+    for (UINT adapterIndex = 0; DXGI_ERROR_NOT_FOUND != pFactory->EnumAdapters1(adapterIndex, &adapter); ++adapterIndex) {
         DXGI_ADAPTER_DESC1 desc;
         adapter->GetDesc1(&desc);
 
-        if (desc.Flags & DXGI_ADAPTER_FLAG::DXGI_ADAPTER_FLAG_SOFTWARE) {
+        if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
+            // Don't select the Basic Render Driver adapter.
+            // If you want a software adapter, pass in "/warp" on the command line.
             continue;
         }
 
-        if (SUCCEEDED(D3D12CreateDevice(
-            adapter.Get(),
-            D3D_FEATURE_LEVEL::D3D_FEATURE_LEVEL_11_0,
-            __uuidof(ID3D12Device),
-            nullptr))) {
+        // Check to see if the adapter supports Direct3D 12, but don't create the
+        // actual device yet.
+        if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, _uuidof(ID3D12Device), nullptr))) {
             break;
         }
     }
@@ -40,7 +42,8 @@ void getHardwareAdapter(IDXGIFactory2* factory, IDXGIAdapter1** ppAdapter) {
 namespace Framework {
 namespace Graphics {
 
-DX12Manager::DX12Manager(HWND hWnd, UINT width, UINT height) {
+DX12Manager::DX12Manager(HWND hWnd, UINT width, UINT height, UINT frameCount)
+    :mHWnd(hWnd), mWidth(width), mHeight(height) {
     //デバッグ用インターフェースを先に作成する
     UINT dxgiFactoryFlags = 0;
 
@@ -54,89 +57,68 @@ DX12Manager::DX12Manager(HWND hWnd, UINT width, UINT height) {
     }
 #endif
 
-    //ファクトリの生成
+    //ファクトリの作成
     ComPtr<IDXGIFactory4> factory;
     throwIfFailed(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory)));
-    static constexpr bool useWrapDevice = true;
-    if (useWrapDevice) {
-        ComPtr<IDXGIAdapter> adapter = nullptr;
-        throwIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&adapter)));
+    static const bool useWarpDevice = true;
+    if (useWarpDevice) {
+        ComPtr<IDXGIAdapter> warpAdapter;
+        throwIfFailed(factory->EnumWarpAdapter(IID_PPV_ARGS(&warpAdapter)));
+
         throwIfFailed(D3D12CreateDevice(
-            adapter.Get(),
-            D3D_FEATURE_LEVEL::D3D_FEATURE_LEVEL_11_0,
-            IID_PPV_ARGS(&mDevice)));
+            warpAdapter.Get(),
+            D3D_FEATURE_LEVEL_11_0,
+            IID_PPV_ARGS(&mDevice)
+        ));
     }
     else {
-        ComPtr<IDXGIAdapter1> adapter;
-        getHardwareAdapter(factory.Get(), &adapter);
+        ComPtr<IDXGIAdapter1> hardwareAdapter;
+        GetHardwareAdapter(factory.Get(), &hardwareAdapter);
+
         throwIfFailed(D3D12CreateDevice(
-            adapter.Get(),
-            D3D_FEATURE_LEVEL::D3D_FEATURE_LEVEL_11_0,
-            IID_PPV_ARGS(&mDevice)));
+            hardwareAdapter.Get(),
+            D3D_FEATURE_LEVEL_11_0,
+            IID_PPV_ARGS(&mDevice)
+        ));
     }
 
     //キュー作成
     D3D12_COMMAND_QUEUE_DESC queueDesc{};
-    queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAGS::D3D12_COMMAND_QUEUE_FLAG_NONE;
-    queueDesc.Type = D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT;
-
-    throwIfFailed(mDevice->CreateCommandQueue(
-        &queueDesc,
-        IID_PPV_ARGS(&mCommandQueue)));
+    queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+    queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+    throwIfFailed(mDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&mCommandQueue)));
+    NAME_D3D12_OBJECT(mCommandQueue);
 
     //スワップチェイン作成
-    DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-    swapChainDesc.BufferCount = FRAME_COUNT;
-    swapChainDesc.Width = width;
-    swapChainDesc.Height = height;
-    swapChainDesc.Format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
-    swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG::DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
-    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-    swapChainDesc.SampleDesc.Count = 1;
+    DXGI_SWAP_CHAIN_DESC1 desc{};
+    desc.BufferCount = FRAME_COUNT;
+    desc.Width = mWidth;
+    desc.Height = mHeight;
+    desc.Format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
+    desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    desc.SwapEffect = DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    desc.SampleDesc.Count = 1;
 
-    ComPtr<IDXGISwapChain1> swapChain;
+    ComPtr<IDXGISwapChain1> sc;
     throwIfFailed(factory->CreateSwapChainForHwnd(
         mCommandQueue.Get(),
-        hWnd,
-        &swapChainDesc,
+        mHWnd,
+        &desc,
         nullptr,
         nullptr,
-        &swapChain));
-    throwIfFailed(factory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_ALT_ENTER));
-    throwIfFailed(swapChain.As(&mSwapChain));
+        &sc));
 
+    //フルスクリーン禁止
+    throwIfFailed(factory->MakeWindowAssociation(mHWnd, DXGI_MWA_NO_ALT_ENTER));
+
+    //スワップチェインを1から3に変換する
+    throwIfFailed(sc.As(&mSwapChain));
     mFrameIndex = mSwapChain->GetCurrentBackBufferIndex();
 
-    //RTV
-    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
-    rtvHeapDesc.NumDescriptors = FRAME_COUNT;
-    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    rtvHeapDesc.NodeMask = 1;
-    throwIfFailed(mDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&mRTVHeap)));
-
-    //RTV作成
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle;
-    rtvHandle = mRTVHeap->GetCPUDescriptorHandleForHeapStart();
-    mRTVDescriptorSize = mDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
-    //それぞれのRTVを作成する
+    //コマンドアロケータをフレーム数分作成
     for (UINT n = 0; n < FRAME_COUNT; n++) {
-        throwIfFailed(mSwapChain->GetBuffer(n, IID_PPV_ARGS(&mRenderTargets[n])));
-        mDevice->CreateRenderTargetView(mRenderTargets[n].Get(), nullptr, rtvHandle);
-        rtvHandle.ptr += INT64(1) * UINT64(mRTVDescriptorSize);
-
-        throwIfFailed(mDevice->CreateCommandAllocator(
-            D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT,
-            IID_PPV_ARGS(&mCommandAllocator[n])));
-        mFenceValue[n] = 1;
-    }
-
-    throwIfFailed(mDevice->CreateFence(0, D3D12_FENCE_FLAGS::D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
-    mFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-    if (!mFenceEvent) {
-        throwIfFailed(HRESULT_FROM_WIN32(GetLastError()));
+        throwIfFailed(mDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mCommandAllocator[n])));
+        NAME_D3D12_OBJECT_INDEXED(mCommandAllocator, n);
     }
 
     mViewport.TopLeftX = 0;
@@ -150,7 +132,6 @@ DX12Manager::DX12Manager(HWND hWnd, UINT width, UINT height) {
     mScissorRect.top = 0;
     mScissorRect.right = static_cast<LONG>(width);
     mScissorRect.bottom = static_cast<LONG>(height);
-
 }
 
 DX12Manager::~DX12Manager() {
@@ -158,7 +139,39 @@ DX12Manager::~DX12Manager() {
     CloseHandle(mFenceEvent);
 }
 
-void DX12Manager::createPipeline() {
+void DX12Manager::createDefaultAsset() {
+    //RTVの作成
+    D3D12_DESCRIPTOR_HEAP_DESC rtv{};
+    rtv.NumDescriptors = FRAME_COUNT;
+    rtv.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    rtv.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    throwIfFailed(mDevice->CreateDescriptorHeap(&rtv, IID_PPV_ARGS(&mRTVHeap)));
+
+    //DSVの作成
+    D3D12_DESCRIPTOR_HEAP_DESC dsv{};
+    dsv.NumDescriptors = 1;
+    dsv.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+    dsv.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    throwIfFailed(mDevice->CreateDescriptorHeap(&dsv, IID_PPV_ARGS(&mDSVHeap)));
+
+    mRTVDescriptorSize = mDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+    //フレーム数分のレンダーターゲットを作成
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(mRTVHeap->GetCPUDescriptorHandleForHeapStart());
+    for (UINT n = 0; n < FRAME_COUNT; n++) {
+        throwIfFailed(mSwapChain->GetBuffer(n, IID_PPV_ARGS(&mRenderTargets[n])));
+        mDevice->CreateRenderTargetView(mRenderTargets[n].Get(), nullptr, rtvHandle);
+        rtvHandle.Offset(1, mRTVDescriptorSize);
+
+        NAME_D3D12_OBJECT_INDEXED(mRenderTargets, n);
+    }
+
+    //ルートシグネチャ作成
+    mRootSignature = std::make_shared<RootSignature>();
+    mRootSignature->addStaticSamplerParameter(Sampler::createStaticSampler(FilterMode::Linear, AddressMode::Clamp, VisibilityType::All, 0));
+    mRootSignature->createDefaultRootSignature();
+
+    //パイプライン作成
     auto createBlendState = []() {
         D3D12_BLEND_DESC blendDesc{};
         blendDesc.AlphaToCoverageEnable = FALSE;
@@ -171,29 +184,59 @@ void DX12Manager::createPipeline() {
         return blendDesc;
     };
 
-    mRootSignature = std::make_shared<RootSignature>();
-    mRootSignature->addStaticSamplerParameter(Sampler::createStaticSampler(FilterMode::Linear, AddressMode::Clamp, VisibilityType::All, 0));
-    mRootSignature->createDX12RootSignature();
-
-    Framework::Utility::ShaderReader vsreader((std::string)Framework::Define::Path::getInstance().shader + "VertexShader.cso");
-    std::vector<BYTE> vs = vsreader.get();
-    std::vector<D3D12_INPUT_ELEMENT_DESC> elemDescs = vsreader.getShaderReflection();
-    Framework::Utility::ShaderReader psreader((std::string)Framework::Define::Path::getInstance().shader + "PixelShader.cso");
-    std::vector<BYTE> ps = psreader.get();
+    Framework::Utility::ShaderReader vsReader((std::string)Framework::Define::Path::getInstance().shader + "VertexShader.cso");
+    Framework::Utility::ShaderReader psReader((std::string)Framework::Define::Path::getInstance().shader + "PixelShader.cso");
+    std::vector<BYTE> vs = vsReader.get();
+    std::vector<D3D12_INPUT_ELEMENT_DESC> elem = vsReader.getShaderReflection();
+    std::vector<BYTE> ps = psReader.get();
 
     mDefaultPipeline = std::make_unique<Pipeline>(mRootSignature);
     mDefaultPipeline->setVertexShader({ vs.data(),vs.size() });
     mDefaultPipeline->setPixelShader({ ps.data(),ps.size() });
-    mDefaultPipeline->setInputLayout({ elemDescs.data(),(UINT)elemDescs.size() });
+    mDefaultPipeline->setInputLayout({ elem.data(),(UINT)elem.size() });
     mDefaultPipeline->setBlendState(createBlendState());
-    mDefaultPipeline->setRasterizerState(Rasterizer(FillMode::Solid, CullMode::None));
+    mDefaultPipeline->setRasterizerState(Rasterizer(FillMode::Solid, CullMode::Back));
     mDefaultPipeline->setPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY_TYPE::D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE);
     mDefaultPipeline->setSampleDesc({ 1,0 });
     mDefaultPipeline->setSampleMask(UINT_MAX);
+    mDefaultPipeline->setDepthStencil(CD3DX12_DEPTH_STENCIL_DESC1(D3D12_DEFAULT), DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT);
     mDefaultPipeline->setRenderTarget({ DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM });
     mDefaultPipeline->createPipelineState();
 
     throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocator[mFrameIndex].Get(), mDefaultPipeline->getPipelineState(), IID_PPV_ARGS(&mCommandList)));
+    NAME_D3D12_OBJECT(mCommandList);
+
+    //DSV作成
+    D3D12_DEPTH_STENCIL_VIEW_DESC desc{};
+    desc.Format = DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT;
+    desc.ViewDimension = D3D12_DSV_DIMENSION::D3D12_DSV_DIMENSION_TEXTURE2D;
+    desc.Flags = D3D12_DSV_FLAGS::D3D12_DSV_FLAG_NONE;
+
+    D3D12_CLEAR_VALUE val{};
+    val.Format = DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT;
+    val.DepthStencil.Depth = 1.0f;
+    val.DepthStencil.Stencil = 0;
+
+    throwIfFailed(mDevice->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT, mWidth, mHeight, 1, 0, 1, 0, D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+        D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &val,
+        IID_PPV_ARGS(&mDepthStencil)));
+
+    NAME_D3D12_OBJECT(mDepthStencil);
+
+    mDevice->CreateDepthStencilView(mDepthStencil.Get(), &desc, mDSVHeap->GetCPUDescriptorHandleForHeapStart());
+
+    //フェンス作成
+    throwIfFailed(mDevice->CreateFence(mFenceValue[mFrameIndex], D3D12_FENCE_FLAGS::D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&mFence)));
+    mFenceValue[mFrameIndex]++;
+
+    mFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    if (mFenceEvent == nullptr) {
+        throwIfFailed(HRESULT_FROM_WIN32(GetLastError()));
+    }
 }
 
 void DX12Manager::drawBegin() {
@@ -207,12 +250,13 @@ void DX12Manager::drawBegin() {
     mCommandList->RSSetScissorRects(1, &mScissorRect);
 
     mCommandList->ResourceBarrier(1, &createResourceBarrier(mRenderTargets[mFrameIndex].Get(), D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET));
-    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle{};
-    rtvHandle.ptr = static_cast<SIZE_T>(mRTVHeap->GetCPUDescriptorHandleForHeapStart().ptr + INT64(mFrameIndex) * UINT64(mRTVDescriptorSize));
-    mCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtv(mRTVHeap->GetCPUDescriptorHandleForHeapStart(), mFrameIndex, mRTVDescriptorSize);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE dsv(mDSVHeap->GetCPUDescriptorHandleForHeapStart());
+    mCommandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
 
-    const float clear[] = { 0.0f,0.0f,0.0f,0.0f };
-    mCommandList->ClearRenderTargetView(rtvHandle, clear, 0, nullptr);
+    const float clear[] = { 0.0f,0.0f,0.0f,1.0f };
+    mCommandList->ClearRenderTargetView(rtv, clear, 0, nullptr);
+    mCommandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAGS::D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAGS::D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 }
 
 void DX12Manager::drawEnd() {
@@ -225,7 +269,6 @@ void DX12Manager::drawEnd() {
 }
 
 void DX12Manager::executeCommand() {
-    //コマンドリストを閉じて実行処理
     throwIfFailed(mCommandList->Close());
     ID3D12CommandList* lists[] = { mCommandList.Get() };
     mCommandQueue->ExecuteCommandLists(_countof(lists), lists);
@@ -237,10 +280,9 @@ void DX12Manager::waitForPreviousFrame() {
     mFrameIndex = mSwapChain->GetCurrentBackBufferIndex();
     if (mFence->GetCompletedValue() < fence) {
         throwIfFailed(mFence->SetEventOnCompletion(fence, mFenceEvent));
-        WaitForSingleObject(mFenceEvent, INFINITE);
+        WaitForSingleObjectEx(mFenceEvent, INFINITE, FALSE);
     }
     mFenceValue[mFrameIndex] = fence + 1;
-
 }
 
 } //Graphics 

@@ -19,8 +19,9 @@ public:
     * @param hWnd ウィンドウハンドル
     * @param width ウィンドウの幅
     * @param height ウィンドウの高さ
+    * @param frameCount バックバッファの枚数
     */
-    DX12Manager(HWND hWnd, UINT width, UINT height);
+    DX12Manager(HWND hWnd, UINT width, UINT height, UINT frameCount);
     /**
     * @brief デストラクタ
     */
@@ -28,7 +29,7 @@ public:
     /**
     * @brief デフォルトのパイプライン作成
     */
-    void createPipeline();
+    void createDefaultAsset();
     /**
     * @brief デバイスを取得する
     */
@@ -49,7 +50,6 @@ public:
     * @brief コマンドリストを実行する
     */
     void executeCommand();
-    //private:
     /**
     * @brief フレーム経過まで待機する
     */
@@ -59,14 +59,19 @@ public:
     */
     std::shared_ptr<RootSignature> getMainRootSignature() const { return mRootSignature; }
 private:
-    static constexpr UINT FRAME_COUNT = 2;
+    static constexpr UINT FRAME_COUNT = 3;
+    HWND mHWnd; //!< ウィンドウハンドル
+    UINT mWidth; //!< 画面幅
+    UINT mHeight; //!< 画面高さ
     ComPtr<ID3D12Device> mDevice; //!< デバイス
     ComPtr<ID3D12CommandQueue> mCommandQueue; //!< コマンドキュー
     ComPtr<IDXGISwapChain3> mSwapChain; //!< スワップチェイン
     UINT mFrameIndex; //!< 現在のバックバッファフレーム番号
     ComPtr<ID3D12CommandAllocator> mCommandAllocator[FRAME_COUNT]; //!< コマンドアロケータ
     ComPtr<ID3D12Resource> mRenderTargets[FRAME_COUNT]; //!< レンダーターゲット
+    ComPtr<ID3D12Resource> mDepthStencil; //!< 深度・ステンシルビュー
     ComPtr<ID3D12DescriptorHeap> mRTVHeap; //!< RTV用
+    ComPtr<ID3D12DescriptorHeap> mDSVHeap; //!< DSV用
     ComPtr<ID3D12GraphicsCommandList> mCommandList; //!< コマンドリスト
     ComPtr<ID3D12Fence> mFence; //!< フェンス
     UINT64 mFenceValue[FRAME_COUNT];

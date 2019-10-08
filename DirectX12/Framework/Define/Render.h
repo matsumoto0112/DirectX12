@@ -10,6 +10,7 @@ namespace Define {
 */
 class Render {
 public:
+    static constexpr UINT FRAME_COUNT = 3;
     static constexpr UINT MAX_CONSTANT_BUFFER_REGISTER_NUM = 16; //!< コンスタントバッファのレジスター最大数
     static constexpr UINT MAX_TEXTURE_REGISTER_NUM = 8; //!< テクスチャのレジスター最大数
     static constexpr UINT MAX_ONE_FRAME_RENDERING_OBJECT = 10000; //!< 1フレームで描画する最大オブジェクト数（同じコンスタントバッファやテクスチャを利用する場合もっと描画可能）

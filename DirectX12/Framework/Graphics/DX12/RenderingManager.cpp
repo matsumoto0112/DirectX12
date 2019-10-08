@@ -7,8 +7,8 @@ RenderingManager::RenderingManager() { }
 RenderingManager::~RenderingManager() { }
 
 void RenderingManager::init(HWND hWnd, UINT width, UINT height) {
-    mManager = std::make_unique<DX12Manager>(hWnd, width, height);
-    mManager->createPipeline();
+    mManager = std::make_unique<DX12Manager>(hWnd, width, height, 3);
+    mManager->createDefaultAsset();
     mConstantBufferManager = std::make_unique<ConstantBufferManager>();
     mSRVManager = std::make_unique<SRVManager>();
     mManager->executeCommand();
