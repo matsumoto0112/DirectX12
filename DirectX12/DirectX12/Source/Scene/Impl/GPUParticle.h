@@ -123,7 +123,6 @@ private:
 
     //コンピュートシェーダー用バッファ
     CSRootConstants mCSRootConstants;
-    bool mEnableCulling;
 
     //パイプライン
     CD3DX12_VIEWPORT mViewport;

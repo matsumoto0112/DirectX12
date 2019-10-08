@@ -68,7 +68,6 @@ GPUParticle::GPUParticle(HWND hWnd)
     mRTVDescriptorSize(0),
     mCBV_SRV_UAV_DescriptorSize(0),
     mCSRootConstants(),
-    mEnableCulling(false),
     mFenceValues{},
     mHWnd(hWnd){
 
@@ -127,8 +126,7 @@ bool GPUParticle::isEndScene() const {
 
 void GPUParticle::draw() {
     populateCommandList();
-
-    if (mEnableCulling) {
+    {
         ID3D12CommandList* list[] = { mComputeCommandList.Get() };
         mComputeCommandQueue->ExecuteCommandLists(_countof(list), list);
 
@@ -681,27 +679,25 @@ void GPUParticle::populateCommandList() {
     throwIfFailed(mCommandList->Reset(mCommandAllocators[mFrameIndex].Get(), mPipelineState.Get()));
 
 
-    if (mEnableCulling) {
-        UINT frameOffset = mFrameIndex * CbvSrvUavDescriptorCountPerFrame;
-        D3D12_GPU_DESCRIPTOR_HANDLE handle = mCBV_SRV_UAV_Heap->GetGPUDescriptorHandleForHeapStart();
+    UINT frameOffset = mFrameIndex * CbvSrvUavDescriptorCountPerFrame;
+    D3D12_GPU_DESCRIPTOR_HANDLE handle = mCBV_SRV_UAV_Heap->GetGPUDescriptorHandleForHeapStart();
 
-        mComputeCommandList->SetComputeRootSignature(mComputeRootSignature.Get());
-        ID3D12DescriptorHeap* heap[] = { mCBV_SRV_UAV_Heap.Get() };
-        mComputeCommandList->SetDescriptorHeaps(_countof(heap), heap);
+    mComputeCommandList->SetComputeRootSignature(mComputeRootSignature.Get());
+    ID3D12DescriptorHeap* heap[] = { mCBV_SRV_UAV_Heap.Get() };
+    mComputeCommandList->SetDescriptorHeaps(_countof(heap), heap);
 
-        mComputeCommandList->SetComputeRootDescriptorTable(
-            SrvUavTable,
-            CD3DX12_GPU_DESCRIPTOR_HANDLE(handle, CbvSrvOffset + frameOffset, mCBV_SRV_UAV_DescriptorSize));
+    mComputeCommandList->SetComputeRootDescriptorTable(
+        SrvUavTable,
+        CD3DX12_GPU_DESCRIPTOR_HANDLE(handle, CbvSrvOffset + frameOffset, mCBV_SRV_UAV_DescriptorSize));
 
-        mComputeCommandList->SetComputeRoot32BitConstants(RootConstants, 4, reinterpret_cast<void*>(&mCSRootConstants), 0);
+    mComputeCommandList->SetComputeRoot32BitConstants(RootConstants, 4, reinterpret_cast<void*>(&mCSRootConstants), 0);
 
-        mComputeCommandList->CopyBufferRegion(mProcessedCommandBuffers[mFrameIndex].Get(), COMMAND_BUFFER_COUNTER_OFFSET, mProcessedCommandBufferCounterReset.Get(), 0, sizeof(UINT));
+    mComputeCommandList->CopyBufferRegion(mProcessedCommandBuffers[mFrameIndex].Get(), COMMAND_BUFFER_COUNTER_OFFSET, mProcessedCommandBufferCounterReset.Get(), 0, sizeof(UINT));
 
-        D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(mProcessedCommandBuffers[mFrameIndex].Get(), D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-        mComputeCommandList->ResourceBarrier(1, &barrier);
+    D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(mProcessedCommandBuffers[mFrameIndex].Get(), D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    mComputeCommandList->ResourceBarrier(1, &barrier);
 
-        mComputeCommandList->Dispatch(static_cast<UINT>(ceil(TRIANGLE_COUNT / float(COMPUTE_THREAD_BLOCK_SIZE))), 1, 1);
-    }
+    mComputeCommandList->Dispatch(static_cast<UINT>(ceil(TRIANGLE_COUNT / float(COMPUTE_THREAD_BLOCK_SIZE))), 1, 1);
 
     throwIfFailed(mComputeCommandList->Close());
 
@@ -712,12 +708,12 @@ void GPUParticle::populateCommandList() {
         mCommandList->SetDescriptorHeaps(_countof(heap), heap);
 
         mCommandList->RSSetViewports(1, &mViewport);
-        mCommandList->RSSetScissorRects(1, mEnableCulling ? &mCullingScissorRect : &mScissorRect);
+        mCommandList->RSSetScissorRects(1, &mCullingScissorRect);
 
         D3D12_RESOURCE_BARRIER barriers[2]{
             CD3DX12_RESOURCE_BARRIER::Transition(
-                mEnableCulling ? mProcessedCommandBuffers[mFrameIndex].Get() : mCommandBuffer.Get(),
-                mEnableCulling ? D3D12_RESOURCE_STATE_UNORDERED_ACCESS : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+               mProcessedCommandBuffers[mFrameIndex].Get() ,
+             D3D12_RESOURCE_STATE_UNORDERED_ACCESS ,
                 D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT),
             CD3DX12_RESOURCE_BARRIER::Transition(
                 mRenderTargets[mFrameIndex].Get(),
@@ -738,24 +734,13 @@ void GPUParticle::populateCommandList() {
         mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY::D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
         mCommandList->IASetVertexBuffers(0, 1, &mVertexBufferView);
 
-        if (mEnableCulling) {
-            mCommandList->ExecuteIndirect(
-                mCommandSignature.Get(),
-                TRIANGLE_COUNT,
-                mProcessedCommandBuffers[mFrameIndex].Get(),
-                0,
-                mProcessedCommandBuffers[mFrameIndex].Get(),
-                COMMAND_BUFFER_COUNTER_OFFSET);
-        }
-        else {
-            mCommandList->ExecuteIndirect(
-                mCommandSignature.Get(),
-                TRIANGLE_COUNT,
-                mCommandBuffer.Get(),
-                COMMAND_SIZE_PER_FRAME * mFrameIndex,
-                nullptr,
-                0);
-        }
+        mCommandList->ExecuteIndirect(
+            mCommandSignature.Get(),
+            TRIANGLE_COUNT,
+            mProcessedCommandBuffers[mFrameIndex].Get(),
+            0,
+            mProcessedCommandBuffers[mFrameIndex].Get(), COMMAND_BUFFER_COUNTER_OFFSET);
+
         ImGui::Begin("FPS");
         ImGui::Text("FPS %.3f", (float)Framework::Utility::Time::getInstance().currentFPS);
         ImGui::End();
@@ -766,7 +751,7 @@ void GPUParticle::populateCommandList() {
 
 
         barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
-        barriers[0].Transition.StateAfter = mEnableCulling ? D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST : D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+        barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST;
 
         barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_RENDER_TARGET;
         barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PRESENT;
