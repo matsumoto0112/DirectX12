@@ -83,9 +83,9 @@ ExecuteIndirect::ExecuteIndirect(HWND hWnd)
     mCSRootConstants.commandCount = TRIANGLE_COUNT;
 
     float center = mWidth * 0.5f;
-    mScissorRect.left = static_cast<LONG>(center - (center * CULLING_CUT_OFF));
-    mScissorRect.right = static_cast<LONG>(center + (center * CULLING_CUT_OFF));
-    mScissorRect.bottom = static_cast<LONG>(mHeight);
+    mCullingScissorRect.left = static_cast<LONG>(center - (center * CULLING_CUT_OFF));
+    mCullingScissorRect.right = static_cast<LONG>(center + (center * CULLING_CUT_OFF));
+    mCullingScissorRect.bottom = static_cast<LONG>(mHeight);
 }
 
 ExecuteIndirect::~ExecuteIndirect() {
@@ -99,18 +99,18 @@ void ExecuteIndirect::load(Framework::Scene::Collecter& collecter) {
 }
 
 void ExecuteIndirect::update() {
-    //for (UINT n = 0; n < TRIANGLE_COUNT; n++) {
-    //    const float offset = 2.5f;
+    for (UINT n = 0; n < TRIANGLE_COUNT; n++) {
+        const float offset = 2.5f;
 
-    //    mConstantBufferData[n].offset.x += mConstantBufferData[n].velocity.x;
-    //    if (mConstantBufferData[n].offset.x > offset) {
-    //        mConstantBufferData[n].velocity.x = 0.01f;
-    //        mConstantBufferData[n].offset.x = -offset;
-    //    }
-    //}
+        mConstantBufferData[n].offset.x += mConstantBufferData[n].velocity.x;
+        if (mConstantBufferData[n].offset.x > offset) {
+            mConstantBufferData[n].velocity.x = 0.01f;
+            mConstantBufferData[n].offset.x = -offset;
+        }
+    }
 
-    //UINT8* dest = mCbvDataBegin + (TRIANGLE_COUNT * mFrameIndex * sizeof(SceneConstantBuffer));
-    //memcpy(dest, &mConstantBufferData[0], TRIANGLE_COUNT * sizeof(SceneConstantBuffer));
+    UINT8* dest = mCbvDataBegin + (TRIANGLE_COUNT * mFrameIndex * sizeof(SceneConstantBuffer));
+    memcpy(dest, &mConstantBufferData[0], TRIANGLE_COUNT * sizeof(SceneConstantBuffer));
 }
 
 bool ExecuteIndirect::isEndScene() const {
@@ -182,16 +182,16 @@ void ExecuteIndirect::loadPipeline() {
     {
         //グラフィック用キュー作成
         D3D12_COMMAND_QUEUE_DESC queueDesc{};
-        queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAGS::D3D12_COMMAND_QUEUE_FLAG_NONE;
-        queueDesc.Type = D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT;
+        queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+        queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
         throwIfFailed(mDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&mCommandQueue)));
         NAME_D3D12_OBJECT(mCommandQueue);
     }
     {
         //CP用キュー作成
         D3D12_COMMAND_QUEUE_DESC computeQueueDesc{};
-        computeQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAGS::D3D12_COMMAND_QUEUE_FLAG_NONE;
-        computeQueueDesc.Type = D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_COMPUTE;
+        computeQueueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+        computeQueueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
         throwIfFailed(mDevice->CreateCommandQueue(&computeQueueDesc, IID_PPV_ARGS(&mComputeCommandQueue)));
         NAME_D3D12_OBJECT(mComputeCommandQueue);
     }
@@ -201,9 +201,9 @@ void ExecuteIndirect::loadPipeline() {
         desc.BufferCount = FRAME_COUNT;
         desc.Width = mWidth;
         desc.Height = mHeight;
-        desc.Format = DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM;
+        desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
         desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        desc.SwapEffect = DXGI_SWAP_EFFECT::DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
         desc.SampleDesc.Count = 1;
 
         ComPtr<IDXGISwapChain1> sc;
@@ -226,27 +226,27 @@ void ExecuteIndirect::loadPipeline() {
         //RTV
         D3D12_DESCRIPTOR_HEAP_DESC rtv{};
         rtv.NumDescriptors = FRAME_COUNT;
-        rtv.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-        rtv.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        rtv.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+        rtv.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         throwIfFailed(mDevice->CreateDescriptorHeap(&rtv, IID_PPV_ARGS(&mRTVHeap)));
 
         //DSV
         D3D12_DESCRIPTOR_HEAP_DESC dsv{};
         dsv.NumDescriptors = 1;
-        dsv.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-        dsv.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+        dsv.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+        dsv.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         throwIfFailed(mDevice->CreateDescriptorHeap(&dsv, IID_PPV_ARGS(&mDSVHeap)));
 
         //CBV,SRV,UAV
         D3D12_DESCRIPTOR_HEAP_DESC desc{};
-        desc.NumDescriptors = (HeapOffsets::CbvSrvUavDescriptorCountPerFrame) * FRAME_COUNT;
-        desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-        desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        desc.NumDescriptors = CbvSrvUavDescriptorCountPerFrame * FRAME_COUNT;
+        desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+        desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         throwIfFailed(mDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&mCBV_SRV_UAV_Heap)));
         NAME_D3D12_OBJECT(mCBV_SRV_UAV_Heap);
 
-        mRTVDescriptorSize = mDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-        mCBV_SRV_UAV_DescriptorSize = mDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+        mRTVDescriptorSize = mDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+        mCBV_SRV_UAV_DescriptorSize = mDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     }
 
     {
@@ -260,8 +260,8 @@ void ExecuteIndirect::loadPipeline() {
 
             NAME_D3D12_OBJECT_INDEXED(mRenderTargets, n);
 
-            throwIfFailed(mDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mCommandAllocators[n])));
-            throwIfFailed(mDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&mComputeCommandAllocators[n])));
+            throwIfFailed(mDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&mCommandAllocators[n])));
+            throwIfFailed(mDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&mComputeCommandAllocators[n])));
         }
     }
 }
@@ -270,16 +270,16 @@ void ExecuteIndirect::loadAssets() {
     {
         //ルートシグネチャ作成
         D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData{};
-        featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION::D3D_ROOT_SIGNATURE_VERSION_1_1;
-        if (FAILED(mDevice->CheckFeatureSupport(D3D12_FEATURE::D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData)))) {
-            featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION::D3D_ROOT_SIGNATURE_VERSION_1_0;
+        featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+        if (FAILED(mDevice->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData)))) {
+            featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
         }
 
-        CD3DX12_ROOT_PARAMETER1 rootParameters[1];
-        rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAGS::D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY::D3D12_SHADER_VISIBILITY_VERTEX);
+        CD3DX12_ROOT_PARAMETER1 rootParameters[GraphicsRootParametersCount];
+        rootParameters[0].InitAsConstantBufferView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC, D3D12_SHADER_VISIBILITY_VERTEX);
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
-        rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+        rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
         ComPtr<ID3DBlob> signature;
         ComPtr<ID3DBlob> error;
@@ -289,12 +289,12 @@ void ExecuteIndirect::loadAssets() {
 
         //コンピュートシグネチャ作成
         CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
-        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAGS::D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAGS::D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
+        ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 2, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+        ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_UAV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE);
 
-        CD3DX12_ROOT_PARAMETER1 computeRootParameters[2];
-        computeRootParameters[0].InitAsDescriptorTable(2, ranges);
-        computeRootParameters[1].InitAsConstants(4, 0);
+        CD3DX12_ROOT_PARAMETER1 computeRootParameters[ComputeRootParametersCount];
+        computeRootParameters[SrvUavTable].InitAsDescriptorTable(2, ranges);
+        computeRootParameters[RootConstants].InitAsConstants(4, 0);
 
         CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
         desc.Init_1_1(_countof(computeRootParameters), computeRootParameters);
@@ -310,12 +310,12 @@ void ExecuteIndirect::loadAssets() {
         ComPtr<ID3DBlob> computeShader;
         ComPtr<ID3DBlob> error;
 
-#if defined(_DEBUG)
+    #if defined(_DEBUG)
         // Enable better shader debugging with the graphics debugging tools.
         UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-#else
+    #else
         UINT compileFlags = 0;
-#endif
+    #endif
         throwIfFailed(D3DCompileFromFile(L"Resources/Shader/shaders.hlsl", nullptr, nullptr, "VSMain", "vs_5_0", compileFlags, 0, &vertexShader, &error));
         throwIfFailed(D3DCompileFromFile(L"Resources/Shader/shaders.hlsl", nullptr, nullptr, "PSMain", "ps_5_0", compileFlags, 0, &pixelShader, &error));
         throwIfFailed(D3DCompileFromFile(L"Resources/Shader/compute.hlsl", nullptr, nullptr, "CSMain", "cs_5_0", compileFlags, 0, &computeShader, &error));
@@ -354,8 +354,8 @@ void ExecuteIndirect::loadAssets() {
         }
     }
     //コマンドリスト作成
-    throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocators[mFrameIndex].Get(), mPipelineState.Get(), IID_PPV_ARGS(&mCommandList)));
-    throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_COMPUTE, mComputeCommandAllocators[mFrameIndex].Get(), mComputeState.Get(), IID_PPV_ARGS(&mComputeCommandList)));
+    throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocators[mFrameIndex].Get(), mPipelineState.Get(), IID_PPV_ARGS(&mCommandList)));
+    throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, mComputeCommandAllocators[mFrameIndex].Get(), mComputeState.Get(), IID_PPV_ARGS(&mComputeCommandList)));
     throwIfFailed(mComputeCommandList->Close());
 
     NAME_D3D12_OBJECT(mCommandList);
@@ -448,9 +448,9 @@ void ExecuteIndirect::loadAssets() {
 
         //データ初期化
         for (UINT n = 0; n < TRIANGLE_COUNT; n++) {
-            mConstantBufferData[n].velocity = XMFLOAT4(0.01f, 0.0f, 0.0f, 0.0f);
-            mConstantBufferData[n].offset = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
-            mConstantBufferData[n].color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+            mConstantBufferData[n].velocity = XMFLOAT4(getRandomFloat(0.01f, 0.02f), 0.0f, 0.0f, 0.0f);
+            mConstantBufferData[n].offset = XMFLOAT4(getRandomFloat(-5.0f, -1.5f), getRandomFloat(-1.0f, 1.0f), getRandomFloat(0.0f, 2.0f), 0.0f);
+            mConstantBufferData[n].color = XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f);
             const float ratio = static_cast<float>(mWidth) / mHeight;
             XMStoreFloat4x4(&mConstantBufferData[n].projection, XMMatrixTranspose(XMMatrixPerspectiveFovLH(XM_PIDIV4, ratio, 0.01f, 20.0f)));
         }
@@ -481,7 +481,7 @@ void ExecuteIndirect::loadAssets() {
         //コンピュートシグネチャ作成
         D3D12_INDIRECT_ARGUMENT_DESC argumentDescs[2] = {};
         argumentDescs[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE::D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
-        argumentDescs[0].ConstantBufferView.RootParameterIndex = static_cast<UINT>(GraphicsRootParameter::Cbv);
+        argumentDescs[0].ConstantBufferView.RootParameterIndex = (GraphicsRootParameter::Cbv);
         argumentDescs[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE::D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
 
         D3D12_COMMAND_SIGNATURE_DESC comDesc{};
@@ -508,48 +508,48 @@ void ExecuteIndirect::loadAssets() {
             IID_PPV_ARGS(&mCommandBuffer)));
 
         throwIfFailed(mDevice->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD),
-            D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
             &CD3DX12_RESOURCE_DESC::Buffer(size),
-            D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_GENERIC_READ,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&commandBufferUpload)));
 
         NAME_D3D12_OBJECT(mCommandBuffer);
 
-        D3D12_GPU_VIRTUAL_ADDRESS addr = mConstantBuffer->GetGPUVirtualAddress();
-        UINT index = 0;
+        D3D12_GPU_VIRTUAL_ADDRESS gpuAddress = mConstantBuffer->GetGPUVirtualAddress();
+        UINT commandIndex = 0;
         for (UINT frame = 0; frame < FRAME_COUNT; frame++) {
             for (UINT n = 0; n < TRIANGLE_COUNT; n++) {
-                commands[index].cbv = addr;
-                commands[index].drawArguments.VertexCountPerInstance = 3;
-                commands[index].drawArguments.InstanceCount = 1;
-                commands[index].drawArguments.StartVertexLocation = 0;
-                commands[index].drawArguments.StartInstanceLocation = 0;
+                commands[commandIndex].cbv = gpuAddress;
+                commands[commandIndex].drawArguments.VertexCountPerInstance = 3;
+                commands[commandIndex].drawArguments.InstanceCount = 1;
+                commands[commandIndex].drawArguments.StartVertexLocation = 0;
+                commands[commandIndex].drawArguments.StartInstanceLocation = 0;
 
-                index++;
-                addr += sizeof(SceneConstantBuffer);
+                commandIndex++;
+                gpuAddress += sizeof(SceneConstantBuffer);
             }
         }
 
-        D3D12_SUBRESOURCE_DATA sub{};
-        sub.pData = reinterpret_cast<UINT8*>(&commands[0]);
-        sub.RowPitch = size;
-        sub.SlicePitch = sub.RowPitch;
+        D3D12_SUBRESOURCE_DATA commandData{};
+        commandData.pData = reinterpret_cast<UINT8*>(&commands[0]);
+        commandData.RowPitch = size;
+        commandData.SlicePitch = commandData.RowPitch;
 
-        UpdateSubresources<1>(mCommandList.Get(), mCommandBuffer.Get(), commandBufferUpload.Get(), 0, 0, 1, &sub);
+        UpdateSubresources<1>(mCommandList.Get(), mCommandBuffer.Get(), commandBufferUpload.Get(), 0, 0, 1, &commandData);
         mCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(mCommandBuffer.Get(), D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 
         //コンピュートシェーダー用SRV
         D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-        srvDesc.Format = DXGI_FORMAT::DXGI_FORMAT_UNKNOWN;
-        srvDesc.ViewDimension = D3D12_SRV_DIMENSION::D3D12_SRV_DIMENSION_BUFFER;
+        srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         srvDesc.Buffer.NumElements = TRIANGLE_COUNT;
         srvDesc.Buffer.StructureByteStride = sizeof(IndirectCommand);
-        srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAGS::D3D12_BUFFER_SRV_FLAG_NONE;
+        srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-        CD3DX12_CPU_DESCRIPTOR_HANDLE handle(mCBV_SRV_UAV_Heap->GetCPUDescriptorHandleForHeapStart(), static_cast<UINT>(HeapOffsets::ProcessedCommandsOffset), mCBV_SRV_UAV_DescriptorSize);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE handle(mCBV_SRV_UAV_Heap->GetCPUDescriptorHandleForHeapStart(), CommandsOffset, mCBV_SRV_UAV_DescriptorSize);
         for (UINT frame = 0; frame < FRAME_COUNT; frame++) {
             srvDesc.Buffer.FirstElement = frame * TRIANGLE_COUNT;
             mDevice->CreateShaderResourceView(mCommandBuffer.Get(), &srvDesc, handle);
@@ -623,7 +623,9 @@ void ExecuteIndirect::loadAssets() {
 }
 
 float ExecuteIndirect::getRandomFloat(float min, float max) {
-    return 0.0f;
+    const float scale = static_cast<float>(rand()) / RAND_MAX;
+    const float range = max - min;
+    return scale * range + min;
 }
 
 void ExecuteIndirect::populateCommandList() {
@@ -636,7 +638,7 @@ void ExecuteIndirect::populateCommandList() {
 
 
     if (mEnableCulling) {
-        UINT frameOffset = mFrameIndex * (HeapOffsets::CbvSrvUavDescriptorCountPerFrame);
+        UINT frameOffset = mFrameIndex * CbvSrvUavDescriptorCountPerFrame;
         D3D12_GPU_DESCRIPTOR_HANDLE handle = mCBV_SRV_UAV_Heap->GetGPUDescriptorHandleForHeapStart();
 
         mComputeCommandList->SetComputeRootSignature(mComputeRootSignature.Get());
@@ -644,10 +646,10 @@ void ExecuteIndirect::populateCommandList() {
         mComputeCommandList->SetDescriptorHeaps(_countof(heap), heap);
 
         mComputeCommandList->SetComputeRootDescriptorTable(
-            static_cast<UINT>(ComputeRootParameters::SrvUavTable),
-            CD3DX12_GPU_DESCRIPTOR_HANDLE(handle, static_cast<UINT>(HeapOffsets::CbvSrvOffset) + frameOffset, mCBV_SRV_UAV_DescriptorSize));
+            SrvUavTable,
+            CD3DX12_GPU_DESCRIPTOR_HANDLE(handle, CbvSrvOffset + frameOffset, mCBV_SRV_UAV_DescriptorSize));
 
-        mComputeCommandList->SetComputeRoot32BitConstants(static_cast<UINT>(ComputeRootParameters::RootConstants), 4, reinterpret_cast<void*>(&mCSRootConstants), 0);
+        mComputeCommandList->SetComputeRoot32BitConstants(RootConstants, 4, reinterpret_cast<void*>(&mCSRootConstants), 0);
 
         mComputeCommandList->CopyBufferRegion(mProcessedCommandBuffers[mFrameIndex].Get(), COMMAND_BUFFER_COUNTER_OFFSET, mProcessedCommandBufferCounterReset.Get(), 0, sizeof(UINT));
 
@@ -671,7 +673,7 @@ void ExecuteIndirect::populateCommandList() {
         D3D12_RESOURCE_BARRIER barriers[2]{
             CD3DX12_RESOURCE_BARRIER::Transition(
                 mEnableCulling ? mProcessedCommandBuffers[mFrameIndex].Get() : mCommandBuffer.Get(),
-                mEnableCulling ? D3D12_RESOURCE_STATE_UNORDERED_ACCESS : D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
+                mEnableCulling ? D3D12_RESOURCE_STATE_UNORDERED_ACCESS : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE,
                 D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT),
             CD3DX12_RESOURCE_BARRIER::Transition(
                 mRenderTargets[mFrameIndex].Get(),
@@ -685,7 +687,7 @@ void ExecuteIndirect::populateCommandList() {
         CD3DX12_CPU_DESCRIPTOR_HANDLE dsv(mDSVHeap->GetCPUDescriptorHandleForHeapStart());
         mCommandList->OMSetRenderTargets(1, &rtv, FALSE, &dsv);
 
-        const float clear[] = { 1.0f,0.0f,0.0f,1.0f };
+        const float clear[] = { 0.0f,0.0f,0.0f,1.0f };
         mCommandList->ClearRenderTargetView(rtv, clear, 0, nullptr);
         mCommandList->ClearDepthStencilView(dsv, D3D12_CLEAR_FLAGS::D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 

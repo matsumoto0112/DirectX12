@@ -146,9 +146,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPTSTR, _I
     MyGame game("Game", hInstance);
     return game.run();
 }
-
-
-
+////
+////
+////
 ////*********************************************************
 ////
 //// Copyright (c) Microsoft. All rights reserved.
