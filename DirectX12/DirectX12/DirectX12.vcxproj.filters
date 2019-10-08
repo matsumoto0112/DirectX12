@@ -13,6 +13,7 @@
     <ClCompile Include="Source\stdafx.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Scene\Impl\GPUParticle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
@@ -38,6 +39,7 @@
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="Source\targetver.h" />
+    <ClInclude Include="Source\Scene\Impl\GPUParticle.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\Shader\PixelShader.hlsl" />
@@ -55,5 +57,6 @@
     <None Include="Resources\Shader\Utility\UtilFunc.hlsli" />
     <None Include="Resources\Shader\compute.hlsl" />
     <None Include="Resources\Shader\shaders.hlsl" />
+    <None Include="Resources\Shader\Particle.hlsl" />
   </ItemGroup>
 </Project>

@@ -47,6 +47,7 @@
 #include "Scene/Impl/ExecuteIndirect.h"
 #include "Scene/Impl/RenderWhiteModel.h"
 #include "Scene/Impl/RenderSamplingTexture.h"
+#include "Scene/Impl/GPUParticle.h"
 
 /**
 * @class MyGame
@@ -75,10 +76,11 @@ public:
         //Framework::Graphics::RenderingManager::getInstance().init(window->getHWND(), width, height);
 
         mSceneManager = std::make_unique<Framework::Scene::Manager>();
-        mSceneManager->registerScene(Framework::Define::SceneType::ExecuteIndirect, std::make_unique<ExecuteIndirect>(window->getHWND()));
+        mSceneManager->registerScene(Framework::Define::SceneType::GPUParticle, std::make_unique<GPUParticle>(window->getHWND()));
+        //mSceneManager->registerScene(Framework::Define::SceneType::ExecuteIndirect, std::make_unique<ExecuteIndirect>(window->getHWND()));
         //mSceneManager->registerScene(Framework::Define::SceneType::RenderWhiteModel, std::make_unique<RenderWhiteModel>());
         //mSceneManager->registerScene(Framework::Define::SceneType::RenderSamplingTexture, std::make_unique<RenderSamplingTexture>());
-        mSceneManager->loadScene(Framework::Define::SceneType::ExecuteIndirect);
+        mSceneManager->loadScene(Framework::Define::SceneType::GPUParticle);
 
         //ID3D12Device* device = DXInterfaceAccessor::getDevice();
 

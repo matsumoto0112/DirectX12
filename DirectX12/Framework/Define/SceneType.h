@@ -11,6 +11,7 @@ enum class SceneType {
     ExecuteIndirect,
     RenderWhiteModel,
     RenderSamplingTexture,
+    GPUParticle,
 };
 
 } //Define 

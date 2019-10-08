@@ -351,7 +351,7 @@ void ExecuteIndirect::loadAssets() {
             for (int i = 0; i < 8; i++) {
                 bd.RenderTarget[i] = Framework::Graphics::BlendState::addBlendDesc();
             }
-
+            
             pso.BlendState = bd;
             pso.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
             pso.SampleMask = UINT_MAX;
@@ -372,7 +372,7 @@ void ExecuteIndirect::loadAssets() {
             throwIfFailed(mDevice->CreateComputePipelineState(&pso, IID_PPV_ARGS(&mComputeState)));
             NAME_D3D12_OBJECT(mComputeState);
         }
-        }
+    }
     //コマンドリスト作成
     throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocators[mFrameIndex].Get(), mPipelineState.Get(), IID_PPV_ARGS(&mCommandList)));
     throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, mComputeCommandAllocators[mFrameIndex].Get(), mComputeState.Get(), IID_PPV_ARGS(&mComputeCommandList)));
@@ -664,7 +664,7 @@ void ExecuteIndirect::loadAssets() {
         mImGUIDescriptorSrvHeap->GetCPUDescriptorHandleForHeapStart(),
         mImGUIDescriptorSrvHeap->GetGPUDescriptorHandleForHeapStart());
 
-    }
+}
 
 float ExecuteIndirect::getRandomFloat(float min, float max) {
     const float scale = static_cast<float>(rand()) / RAND_MAX;

@@ -86,6 +86,7 @@
     <ClCompile Include="Source\DX12\Win32Application.cpp" />
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\Scene\Impl\ExecuteIndirect.cpp" />
+    <ClCompile Include="Source\Scene\Impl\GPUParticle.cpp" />
     <ClCompile Include="Source\Scene\Impl\RenderSamplingTexture.cpp" />
     <ClCompile Include="Source\Scene\Impl\RenderWhiteModel.cpp" />
     <ClCompile Include="Source\stdafx.cpp">
@@ -100,6 +101,7 @@
     <ClInclude Include="Source\DX12\DXSampleHelper.h" />
     <ClInclude Include="Source\DX12\Win32Application.h" />
     <ClInclude Include="Source\Scene\Impl\ExecuteIndirect.h" />
+    <ClInclude Include="Source\Scene\Impl\GPUParticle.h" />
     <ClInclude Include="Source\Scene\Impl\RenderSamplingTexture.h" />
     <ClInclude Include="Source\Scene\Impl\RenderWhiteModel.h" />
     <ClInclude Include="Source\stdafx.h" />
@@ -137,6 +139,13 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
     </FxCompile>
+    <None Include="Resources\Shader\Particle.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">4.0</ShaderModel>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
+      <FileType>Document</FileType>
+    </None>
     <FxCompile Include="Resources\Shader\PixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
