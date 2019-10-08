@@ -1,5 +1,6 @@
 #include "ExecuteIndirect.h"
 #include "Framework/Define/Config.h"
+#include "Framework/Graphics/DX12/Desc/BlendState.h"
 #include "Framework/Graphics/DX12/Helper.h"
 
 // Assign a name to the object to aid with debugging.
@@ -332,7 +333,15 @@ void ExecuteIndirect::loadAssets() {
             pso.VS = CD3DX12_SHADER_BYTECODE(vertexShader.Get());
             pso.PS = CD3DX12_SHADER_BYTECODE(pixelShader.Get());
             pso.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-            pso.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+
+            D3D12_BLEND_DESC bd{};
+            bd.AlphaToCoverageEnable = FALSE;
+            bd.IndependentBlendEnable = FALSE;
+            for (int i = 0; i < 8; i++) {
+                bd.RenderTarget[i] = Framework::Graphics::BlendState::addBlendDesc();
+            }
+
+            pso.BlendState = bd;
             pso.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
             pso.SampleMask = UINT_MAX;
             pso.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE::D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
@@ -450,7 +459,7 @@ void ExecuteIndirect::loadAssets() {
         for (UINT n = 0; n < TRIANGLE_COUNT; n++) {
             mConstantBufferData[n].velocity = XMFLOAT4(getRandomFloat(0.01f, 0.02f), 0.0f, 0.0f, 0.0f);
             mConstantBufferData[n].offset = XMFLOAT4(getRandomFloat(-5.0f, -1.5f), getRandomFloat(-1.0f, 1.0f), getRandomFloat(0.0f, 2.0f), 0.0f);
-            mConstantBufferData[n].color = XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f);
+            mConstantBufferData[n].color = XMFLOAT4(0.0f, 1.0f, 1.0f, 0.1f);
             const float ratio = static_cast<float>(mWidth) / mHeight;
             XMStoreFloat4x4(&mConstantBufferData[n].projection, XMMatrixTranspose(XMMatrixPerspectiveFovLH(XM_PIDIV4, ratio, 0.01f, 20.0f)));
         }
