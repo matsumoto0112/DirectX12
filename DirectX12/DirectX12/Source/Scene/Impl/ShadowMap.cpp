@@ -27,11 +27,22 @@ ShadowMap::ShadowMap() {
     mVertexBuffer = std::make_unique<Framework::Graphics::VertexBuffer>(pos);
     mIndexBuffer = std::make_unique<Framework::Graphics::IndexBuffer>(indices, Framework::Graphics::PrimitiveTolopolyType::TriangleList);
 
+    std::vector<Framework::Math::Vector4> vertices{
+        {-0.5f,0.0f,0.5f,1.0f},
+        {0.5f,0.0f,0.5f,1.0f},
+        {0.5f,0.0f,-0.5f,1.0f},
+        {-0.5f,0.0f,-0.5f,1.0f}
+    };
+    indices = { 0,1,2,0,2,3 };
+    mFloorVB = std::make_unique<Framework::Graphics::VertexBuffer>(vertices);
+    mFloorIB = std::make_unique<Framework::Graphics::IndexBuffer>(indices, Framework::Graphics::PrimitiveTolopolyType::TriangleList);
+
+
     mPipeline = std::make_unique<Graphics::Pipeline>(Graphics::RenderingManager::getInstance().getDX12Manager()->getMainRootSignature());
     Framework::Utility::ShaderReader vsReader((std::string)Framework::Define::Path::getInstance().shader + "3D/Only_Position_VS.cso");
     std::vector<BYTE> vs = vsReader.get();
     mPipeline->setVertexShader({ vs.data(),vs.size() });
-    Framework::Utility::ShaderReader psReader((std::string)Framework::Define::Path::getInstance().shader + "3D/Only_Position_PS.cso");
+    Framework::Utility::ShaderReader psReader((std::string)Framework::Define::Path::getInstance().shader + "3D/Only_Position_Output_Color_PS.cso");
     std::vector<BYTE> ps = psReader.get();
     mPipeline->setPixelShader({ ps.data(),ps.size() });
     std::vector<D3D12_INPUT_ELEMENT_DESC> elem = vsReader.getShaderReflection();
@@ -52,7 +63,7 @@ ShadowMap::ShadowMap() {
     mPipeline->setDepthStencil(CD3DX12_DEPTH_STENCIL_DESC1(D3D12_DEFAULT), DXGI_FORMAT::DXGI_FORMAT_D32_FLOAT);
     mPipeline->createPipelineState();
 
-    mMVP.view = Math::Matrix4x4::createView({ Math::Vector3(0,5,-5),Math::Vector3(0,0,0),Math::Vector3(0,1,0) }).transpose();
+    mMVP.view = Math::Matrix4x4::createView({ Math::Vector3(0,8,-8),Math::Vector3(0,0,0),Math::Vector3(0,1,0) }).transpose();
     float ratio = static_cast<float>(Define::Config::getInstance().screenHeight) / static_cast<float>(Define::Config::getInstance().screenWidth);
     mMVP.proj = Math::Matrix4x4::createProjection({ 45.0f,ratio,0.1f,100.0f }).transpose();
 }
@@ -82,6 +93,8 @@ void ShadowMap::draw() {
     mPipeline->addToCommandList(mCommandList);
     cbManager->beingCBufferUpdate();
     cbManager->updateCBuffer(mMVP);
+    Graphics::Color4 color(1.0f, 1.0f, 0.0f, 1.0f);
+    cbManager->updateCBuffer(color);
 
     cbManager->endCBufferUpdate(mCommandList);
 
@@ -89,6 +102,17 @@ void ShadowMap::draw() {
     mIndexBuffer->addToCommandList(mCommandList);
     mIndexBuffer->drawCall(mCommandList);
 
+    mMVP.world = (Math::Matrix4x4::createScale(Math::Vector3(5, 1, 5) * Math::Matrix4x4::createTranslate(Math::Vector3(0, -5, 0)))).transpose();
+    cbManager->beingCBufferUpdate();
+    cbManager->updateCBuffer(mMVP);
+    color = Graphics::Color4(1.0f, 0.0f, 0.0f, 1.0f);
+    cbManager->updateCBuffer(color);
+
+    cbManager->endCBufferUpdate(mCommandList);
+
+    mFloorVB->addToCommandList(mCommandList);
+    mFloorIB->addToCommandList(mCommandList);
+    mFloorIB->drawCall(mCommandList);
 
 }
 

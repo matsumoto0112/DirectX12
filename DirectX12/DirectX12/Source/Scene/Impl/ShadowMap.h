@@ -51,6 +51,8 @@ public:
 private:
     std::unique_ptr<Framework::Graphics::VertexBuffer> mVertexBuffer; //!< 頂点バッファ
     std::unique_ptr<Framework::Graphics::IndexBuffer> mIndexBuffer; //!< インデックスバッファ
+    std::unique_ptr<Framework::Graphics::VertexBuffer> mFloorVB; //!< 頂点バッファ
+    std::unique_ptr<Framework::Graphics::IndexBuffer> mFloorIB; //!< インデックスバッファ
     std::unique_ptr<Framework::Graphics::Pipeline> mPipeline;
     Framework::Graphics::MVPCBuffer mMVP;
     float mRotate;
