@@ -68,7 +68,7 @@ ExecuteIndirect::ExecuteIndirect(HWND hWnd)
     mRTVDescriptorSize(0),
     mCBV_SRV_UAV_DescriptorSize(0),
     mCSRootConstants(),
-    mEnableCulling(true),
+    mEnableCulling(false),
     mFenceValues{},
     mHWnd(hWnd){
 
@@ -144,9 +144,9 @@ void ExecuteIndirect::draw() {
 }
 
 void ExecuteIndirect::end() {
-    ImGui_ImplDX12_Shutdown();
-    ImGui_ImplWin32_Shutdown();
-    ImGui::DestroyContext();
+    //ImGui_ImplDX12_Shutdown();
+    //ImGui_ImplWin32_Shutdown();
+    //ImGui::DestroyContext();
 }
 
 Framework::Define::SceneType ExecuteIndirect::next() {
@@ -477,7 +477,7 @@ void ExecuteIndirect::loadAssets() {
         for (UINT n = 0; n < TRIANGLE_COUNT; n++) {
             mConstantBufferData[n].velocity = Framework::Math::Vector4(getRandomFloat(0.01f, 0.02f), 0.0f, 0.0f);
             mConstantBufferData[n].offset = Framework::Math::Vector4(getRandomFloat(-5.0f, -1.5f), getRandomFloat(-1.0f, 1.0f), getRandomFloat(0.0f, 2.0f), 0.0f);
-            mConstantBufferData[n].color = Framework::Graphics::Color4(0.0f, 1.0f, 1.0f, 0.1f);
+            mConstantBufferData[n].color = Framework::Graphics::Color4(0.0f, 1.0f, 1.0f, 0.5f);
             mConstantBufferData[n].view = view;
             mConstantBufferData[n].projection = proj;
         }
@@ -584,9 +584,9 @@ void ExecuteIndirect::loadAssets() {
         }
 
         //コンピュートシェーダー用UAV
-        CD3DX12_CPU_DESCRIPTOR_HANDLE uavPtr(mCBV_SRV_UAV_Heap->GetCPUDescriptorHandleForHeapStart(), static_cast<UINT>(HeapOffsets::ProcessedCommandsOffset), mCBV_SRV_UAV_DescriptorSize);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE uavPtr(mCBV_SRV_UAV_Heap->GetCPUDescriptorHandleForHeapStart(), ProcessedCommandsOffset, mCBV_SRV_UAV_DescriptorSize);
         for (UINT f = 0; f < FRAME_COUNT; f++) {
-            desc = CD3DX12_RESOURCE_DESC::Buffer(COMMAND_BUFFER_COUNTER_OFFSET + sizeof(UINT), D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+            desc = CD3DX12_RESOURCE_DESC::Buffer(COMMAND_BUFFER_COUNTER_OFFSET + sizeof(UINT), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
             throwIfFailed(mDevice->CreateCommittedResource(
                 &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_DEFAULT),
                 D3D12_HEAP_FLAGS::D3D12_HEAP_FLAG_NONE,
