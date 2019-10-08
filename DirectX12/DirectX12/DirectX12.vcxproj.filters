@@ -14,6 +14,7 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="Source\Scene\Impl\GPUParticle.cpp" />
+    <ClCompile Include="Source\Scene\Impl\ShadowMap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
@@ -40,6 +41,7 @@
     </ClInclude>
     <ClInclude Include="Source\targetver.h" />
     <ClInclude Include="Source\Scene\Impl\GPUParticle.h" />
+    <ClInclude Include="Source\Scene\Impl\ShadowMap.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Resources\Shader\PixelShader.hlsl" />
@@ -51,8 +53,6 @@
     <FxCompile Include="Resources\Shader\3D\Only_Position_PS.hlsl" />
     <FxCompile Include="Resources\Shader\3D\Pos_UV_VS.hlsl" />
     <FxCompile Include="Resources\Shader\3D\Pos_UV_PS.hlsl" />
-    <FxCompile Include="Resources\Shader\Particle\Particle_GS.hlsl" />
-    <FxCompile Include="Resources\Shader\Particle\Particle_PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shader\Utility\ShaderDefine.hlsli" />
@@ -62,5 +62,7 @@
     <None Include="Resources\Shader\ParticleShaders.hlsl" />
     <None Include="Resources\Shader\Particle\Particle.hlsl" />
     <None Include="Resources\Shader\Particle\Particle_VS.hlsl" />
+    <None Include="Resources\Shader\Particle\Particle_GS.hlsl" />
+    <None Include="Resources\Shader\Particle\Particle_PS.hlsl" />
   </ItemGroup>
 </Project>

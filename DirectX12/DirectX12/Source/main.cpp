@@ -47,7 +47,7 @@
 #include "Scene/Impl/ExecuteIndirect.h"
 #include "Scene/Impl/RenderWhiteModel.h"
 #include "Scene/Impl/RenderSamplingTexture.h"
-#include "Scene/Impl/GPUParticle.h"
+#include "Scene/Impl/ShadowMap.h"
 
 /**
 * @class MyGame
@@ -73,14 +73,14 @@ public:
 
         UINT width = Framework::Define::Config::getInstance().screenWidth;
         UINT height = Framework::Define::Config::getInstance().screenHeight;
-        //Framework::Graphics::RenderingManager::getInstance().init(window->getHWND(), width, height);
+        Framework::Graphics::RenderingManager::getInstance().init(window->getHWND(), width, height);
 
         mSceneManager = std::make_unique<Framework::Scene::Manager>();
-        mSceneManager->registerScene(Framework::Define::SceneType::GPUParticle, std::make_unique<GPUParticle>(window->getHWND()));
+        mSceneManager->registerScene(Framework::Define::SceneType::ShadowMap, std::make_unique<ShadowMap>());
         //mSceneManager->registerScene(Framework::Define::SceneType::ExecuteIndirect, std::make_unique<ExecuteIndirect>(window->getHWND()));
         //mSceneManager->registerScene(Framework::Define::SceneType::RenderWhiteModel, std::make_unique<RenderWhiteModel>());
         //mSceneManager->registerScene(Framework::Define::SceneType::RenderSamplingTexture, std::make_unique<RenderSamplingTexture>());
-        mSceneManager->loadScene(Framework::Define::SceneType::GPUParticle);
+        mSceneManager->loadScene(Framework::Define::SceneType::ShadowMap);
 
         //ID3D12Device* device = DXInterfaceAccessor::getDevice();
 
@@ -118,8 +118,8 @@ protected:
 
     }
     virtual void draw() override {
-        //Framework::Graphics::RenderingManager::getInstance().begin();
-        //ID3D12GraphicsCommandList* mCommandList = Framework::Graphics::RenderingManager::getInstance().getDX12Manager()->getCommandList();
+        Framework::Graphics::RenderingManager::getInstance().begin();
+        ID3D12GraphicsCommandList* mCommandList = Framework::Graphics::RenderingManager::getInstance().getDX12Manager()->getCommandList();
 
         mSceneManager->draw();
 
@@ -127,7 +127,7 @@ protected:
         //mCommandList->SetDescriptorHeaps(1, mImGUIDescriptorSrvHeap.GetAddressOf());
         //ImGui::Render();
         //ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList);
-        //Framework::Graphics::RenderingManager::getInstance().end();
+        Framework::Graphics::RenderingManager::getInstance().end();
     }
     void finalize() override {
         //ImGui_ImplDX12_Shutdown();
@@ -148,25 +148,3 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPTSTR, _I
     MyGame game("Game", hInstance);
     return game.run();
 }
-////
-////
-////
-////*********************************************************
-////
-//// Copyright (c) Microsoft. All rights reserved.
-//// This code is licensed under the MIT License (MIT).
-//// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
-//// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
-//// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
-//// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
-////
-////*********************************************************
-//
-//#include "stdafx.h"
-//#include "DX12/D3D12ExecuteIndirect.h"
-//
-//_Use_decl_annotations_
-//int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow) {
-//    D3D12ExecuteIndirect sample(1280, 720, "D3D12 Execute Indirect sample - Press the SPACE bar to toggle GPU primitive culling");
-//    return Win32Application::Run(&sample, hInstance, nCmdShow);
-//}

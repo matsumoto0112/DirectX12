@@ -12,6 +12,7 @@ enum class SceneType {
     RenderWhiteModel,
     RenderSamplingTexture,
     GPUParticle,
+    ShadowMap,
 };
 
 } //Define 
