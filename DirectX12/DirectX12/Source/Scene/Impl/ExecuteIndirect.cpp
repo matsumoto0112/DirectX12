@@ -2,6 +2,8 @@
 #include "Framework/Define/Config.h"
 #include "Framework/Graphics/DX12/Desc/BlendState.h"
 #include "Framework/Graphics/DX12/Helper.h"
+#include "Framework/Utility/Time.h"
+#include "Framework/ImGUI/ImGUI.h"
 
 // Assign a name to the object to aid with debugging.
 #if defined(_DEBUG) || defined(DBG)
@@ -90,6 +92,7 @@ ExecuteIndirect::ExecuteIndirect(HWND hWnd)
 }
 
 ExecuteIndirect::~ExecuteIndirect() {
+    end();
     waitForGPU();
     CloseHandle(mFenceEvent);
 }
@@ -100,6 +103,10 @@ void ExecuteIndirect::load(Framework::Scene::Collecter& collecter) {
 }
 
 void ExecuteIndirect::update() {
+    ImGui_ImplDX12_NewFrame();
+    ImGui_ImplWin32_NewFrame();
+    ImGui::NewFrame();
+
     for (UINT n = 0; n < TRIANGLE_COUNT; n++) {
         const float offset = 2.5f;
 
@@ -136,7 +143,11 @@ void ExecuteIndirect::draw() {
     moveToNextFrame();
 }
 
-void ExecuteIndirect::end() { }
+void ExecuteIndirect::end() {
+    ImGui_ImplDX12_Shutdown();
+    ImGui_ImplWin32_Shutdown();
+    ImGui::DestroyContext();
+}
 
 Framework::Define::SceneType ExecuteIndirect::next() {
     return Framework::Define::SceneType();
@@ -361,7 +372,7 @@ void ExecuteIndirect::loadAssets() {
             throwIfFailed(mDevice->CreateComputePipelineState(&pso, IID_PPV_ARGS(&mComputeState)));
             NAME_D3D12_OBJECT(mComputeState);
         }
-    }
+        }
     //コマンドリスト作成
     throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, mCommandAllocators[mFrameIndex].Get(), mPipelineState.Get(), IID_PPV_ARGS(&mCommandList)));
     throwIfFailed(mDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, mComputeCommandAllocators[mFrameIndex].Get(), mComputeState.Get(), IID_PPV_ARGS(&mComputeCommandList)));
@@ -497,7 +508,7 @@ void ExecuteIndirect::loadAssets() {
         //コンピュートシグネチャ作成
         D3D12_INDIRECT_ARGUMENT_DESC argumentDescs[2] = {};
         argumentDescs[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE::D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
-        argumentDescs[0].ConstantBufferView.RootParameterIndex = (GraphicsRootParameter::Cbv);
+        argumentDescs[0].ConstantBufferView.RootParameterIndex = GraphicsRootParameter::Cbv;
         argumentDescs[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE::D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
 
         D3D12_COMMAND_SIGNATURE_DESC comDesc{};
@@ -636,7 +647,24 @@ void ExecuteIndirect::loadAssets() {
         }
         waitForGPU();
     }
-}
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
+    ImGui_ImplWin32_Init(mHWnd);
+
+    D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    desc.NumDescriptors = 1;
+    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    throwIfFailed(mDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&mImGUIDescriptorSrvHeap)));
+
+    ImGui_ImplDX12_Init(mDevice.Get(), 2, DXGI_FORMAT::DXGI_FORMAT_R8G8B8A8_UNORM,
+        mImGUIDescriptorSrvHeap->GetCPUDescriptorHandleForHeapStart(),
+        mImGUIDescriptorSrvHeap->GetGPUDescriptorHandleForHeapStart());
+
+    }
 
 float ExecuteIndirect::getRandomFloat(float min, float max) {
     const float scale = static_cast<float>(rand()) / RAND_MAX;
@@ -728,6 +756,14 @@ void ExecuteIndirect::populateCommandList() {
                 nullptr,
                 0);
         }
+        ImGui::Begin("FPS");
+        ImGui::Text("FPS %.3f", (float)Framework::Utility::Time::getInstance().currentFPS);
+        ImGui::End();
+
+        mCommandList->SetDescriptorHeaps(1, mImGUIDescriptorSrvHeap.GetAddressOf());
+        ImGui::Render();
+        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), mCommandList.Get());
+
 
         barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
         barriers[0].Transition.StateAfter = mEnableCulling ? D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COPY_DEST : D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
@@ -736,6 +772,9 @@ void ExecuteIndirect::populateCommandList() {
         barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PRESENT;
 
         mCommandList->ResourceBarrier(_countof(barriers), barriers);
+
+
+
 
         throwIfFailed(mCommandList->Close());
     }

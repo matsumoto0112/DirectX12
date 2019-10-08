@@ -175,4 +175,6 @@ private:
     void populateCommandList();
     void waitForGPU();
     void moveToNextFrame();
+
+    ComPtr<ID3D12DescriptorHeap> mImGUIDescriptorSrvHeap;
 };
