@@ -51,12 +51,16 @@
     <FxCompile Include="Resources\Shader\3D\Only_Position_PS.hlsl" />
     <FxCompile Include="Resources\Shader\3D\Pos_UV_VS.hlsl" />
     <FxCompile Include="Resources\Shader\3D\Pos_UV_PS.hlsl" />
+    <FxCompile Include="Resources\Shader\Particle\Particle_GS.hlsl" />
+    <FxCompile Include="Resources\Shader\Particle\Particle_PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shader\Utility\ShaderDefine.hlsli" />
     <None Include="Resources\Shader\Utility\UtilFunc.hlsli" />
     <None Include="Resources\Shader\compute.hlsl" />
     <None Include="Resources\Shader\shaders.hlsl" />
-    <None Include="Resources\Shader\Particle.hlsl" />
+    <None Include="Resources\Shader\ParticleShaders.hlsl" />
+    <None Include="Resources\Shader\Particle\Particle.hlsl" />
+    <None Include="Resources\Shader\Particle\Particle_VS.hlsl" />
   </ItemGroup>
 </Project>

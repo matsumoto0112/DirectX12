@@ -11,30 +11,18 @@
 * @brief discription
 */
 class GPUParticle : public Framework::Scene::SceneBase {
-    struct Vertex {
-        DirectX::XMFLOAT3 position;
-    };
-
-    struct SceneConstantBuffer {
-        Framework::Math::Vector4 velocity;
-        Framework::Math::Vector4 offset;
+    struct Particle {
+        float lifeTime;
+        float speed;
+        Framework::Math::Vector3 pos;
+        Framework::Math::Vector3 vel;
         Framework::Graphics::Color4 color;
+    };
+
+    struct MVP {
+        Framework::Math::Matrix4x4 world;
         Framework::Math::Matrix4x4 view;
-        Framework::Math::Matrix4x4 projection;
-
-        float dummy[36];
-    };
-
-    struct CSRootConstants {
-        float xOffset;
-        float zOffset;
-        float cullOffset;
-        float commandCount;
-    };
-
-    struct IndirectCommand {
-        D3D12_GPU_VIRTUAL_ADDRESS cbv;
-        D3D12_DRAW_ARGUMENTS drawArguments;
+        Framework::Math::Matrix4x4 proj;
     };
 
     /**
@@ -51,8 +39,7 @@ class GPUParticle : public Framework::Scene::SceneBase {
     * @brief description
     */
     enum  ComputeRootParameters {
-        SrvUavTable,
-        RootConstants,
+        UavTable,
         ComputeRootParametersCount,
     };
 
@@ -108,21 +95,15 @@ public:
     virtual Framework::Define::SceneType next() override;
 private:
     static constexpr UINT FRAME_COUNT = 3;
-    static constexpr UINT TRIANGLE_COUNT = 1024;
-    static constexpr UINT TRIANGLE_RESOURCE_COUNT = TRIANGLE_COUNT * FRAME_COUNT;
-    static const UINT COMMAND_SIZE_PER_FRAME;
-    static const UINT COMMAND_BUFFER_COUNTER_OFFSET;
-    static constexpr UINT COMPUTE_THREAD_BLOCK_SIZE = 128;
-    static const float TRIANGLE_HALF_WIDTH;
-    static const float TRIANGLE_DEPTH;
-    static const float CULLING_CUT_OFF;
+    static constexpr UINT THREAD_X = 128;
+    static constexpr UINT THREAD_Y = 128;
+    static constexpr UINT DISPATCH_X = 1;
+    static constexpr UINT DISPATCH_Y = 1;
+    static constexpr UINT PARTICLE_NUM = THREAD_X * THREAD_Y * DISPATCH_X * DISPATCH_Y;
 
-    //このデータをすべての三角形が参照する
-    std::vector<SceneConstantBuffer> mConstantBufferData; //!< コンスタントバッファデータ
-    UINT8* mCbvDataBegin;
+    std::vector<Particle> mConstantBufferData; //!< コンスタントバッファデータ
 
-    //コンピュートシェーダー用バッファ
-    CSRootConstants mCSRootConstants;
+    MVP mMVPCBufferData;
 
     //パイプライン
     CD3DX12_VIEWPORT mViewport;
@@ -132,17 +113,16 @@ private:
     ComPtr<ID3D12Device> mDevice;
     ComPtr<ID3D12Resource> mRenderTargets[FRAME_COUNT];
     ComPtr<ID3D12CommandAllocator> mCommandAllocators[FRAME_COUNT];
-    ComPtr<ID3D12CommandAllocator> mComputeCommandAllocators[FRAME_COUNT];
+    ComPtr<ID3D12CommandAllocator> mComputeCommandAllocators; //!< コンピュートシェーダ―用アロケーター
     ComPtr<ID3D12CommandQueue> mCommandQueue;
-    ComPtr<ID3D12CommandQueue> mComputeCommandQueue;
+    ComPtr<ID3D12CommandQueue> mComputeCommandQueue; //!< コンピュートシェーダー用キュー
     ComPtr<ID3D12RootSignature> mRootSignature;
-    ComPtr<ID3D12RootSignature> mComputeRootSignature;
-    ComPtr<ID3D12CommandSignature> mCommandSignature;
+    ComPtr<ID3D12RootSignature> mComputeRootSignature; //!< コンピュートシェーダ―用ルートシグネチャ
     ComPtr<ID3D12DescriptorHeap> mRTVHeap;
     ComPtr<ID3D12DescriptorHeap> mDSVHeap;
-    ComPtr<ID3D12DescriptorHeap> mCBV_SRV_UAV_Heap;
+    ComPtr<ID3D12DescriptorHeap> mParticleUAVHeap;
     UINT mRTVDescriptorSize;
-    UINT mCBV_SRV_UAV_DescriptorSize;
+    UINT mParticleUAVDescriptorSize;
     UINT mFrameIndex;
 
     //同期オブジェクト
@@ -153,15 +133,13 @@ private:
 
     //アセット
     ComPtr<ID3D12PipelineState> mPipelineState;
-    ComPtr<ID3D12PipelineState> mComputeState;
+    ComPtr<ID3D12PipelineState> mComputePipelineState; //!< コンピュートシェーダ―用パイプライン
     ComPtr<ID3D12GraphicsCommandList> mCommandList;
-    ComPtr<ID3D12GraphicsCommandList> mComputeCommandList;
-    ComPtr<ID3D12Resource> mVertexBuffer;
+    ComPtr<ID3D12GraphicsCommandList> mComputeCommandList; //!< コンピュートシェーダ―用コマンドリスト
     ComPtr<ID3D12Resource> mConstantBuffer;
     ComPtr<ID3D12Resource> mDepthStencil;
     ComPtr<ID3D12Resource> mCommandBuffer;
-    ComPtr<ID3D12Resource> mProcessedCommandBuffers[FRAME_COUNT];
-    ComPtr<ID3D12Resource> mProcessedCommandBufferCounterReset;
+    ComPtr<ID3D12Resource> mParticleUAVBuffer;
     D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;
 
     UINT mWidth;
@@ -176,6 +154,4 @@ private:
     void moveToNextFrame();
 
     ComPtr<ID3D12DescriptorHeap> mImGUIDescriptorSrvHeap;
-
-
 };

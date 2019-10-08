@@ -9,8 +9,8 @@
 //
 //*********************************************************
 
-#define THREAD_X 128
-#define THREAD_Y 128
+#define THREAD_X 1
+#define THREAD_Y 1
 
 #define DISPATCH_X 1
 #define DISPATCH_Y 1
@@ -72,9 +72,7 @@ void updateParticle(int index)
         particles.Store(index + COLOR_OFFSET + 4 * 3, asuint(0.0f));
 };
 
-
-
-[numthreads(threadBlockSize, 1, 1)]
+[numthreads(THREAD_X, THREAD_Y, 1)]
 void CSMain(const CSInput input)
 {
     const uint index = input.dispatch.z * DISPATCH_X * THREAD_X * DISPATCH_Y * THREAD_Y
